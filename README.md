@@ -13,6 +13,8 @@ Statyczna aplikacja do odmierzania czasu podczas ćwiczeń: stoper, minutnik prz
 - Motyw jasny i ciemny, zapamiętywany w przeglądarce.
 - Dźwięk i wibracja po zakończeniu minutnika lub kroku treningu, jeśli urządzenie i przeglądarka je obsługują.
 - Wake Lock, czyli opcja niewygaszania ekranu podczas pomiaru.
+- Panel `Info` w aplikacji z krótką listą najważniejszych możliwości.
+- Subtelne oznaczenie `powered by Sidd` w interfejsie.
 - Service worker i manifest, dzięki którym aplikacja może działać wygodniej na telefonie i częściowo offline.
 
 ## Skróty klawiszowe

@@ -20,6 +20,7 @@
     </div>
 
     <div class="topbar-actions">
+      <button class="icon-button info-toggle" id="infoToggle" type="button" aria-label="Pokaż informacje o aplikacji" title="Info">i</button>
       <button class="icon-button fullscreen-toggle" id="fullscreenToggle" type="button" aria-label="Przełącz pełny ekran" aria-keyshortcuts="F" aria-pressed="false" title="Pełny ekran (F)">FS</button>
       <button class="icon-button theme-toggle" id="themeToggle" type="button" aria-label="Przełącz motyw" aria-keyshortcuts="T" aria-pressed="false" title="Przełącz motyw (T)">
         <span class="theme-icon theme-icon-light" aria-hidden="true">☀</span>
@@ -129,7 +130,53 @@ Plank</textarea>
     </section>
 
     <section class="laps-section" id="lapsSection" aria-label="Okrążenia"></section>
+
+    <footer class="app-footer">
+      <button class="text-link" id="footerInfoToggle" type="button">Info</button>
+      <span>powered by <strong>Sidd</strong></span>
+    </footer>
   </main>
+
+  <dialog class="info-dialog" id="infoDialog" aria-labelledby="infoTitle">
+    <div class="info-panel">
+      <div class="info-header">
+        <div>
+          <p class="info-kicker">powered by Sidd</p>
+          <h2 id="infoTitle">Co możesz tu robić?</h2>
+        </div>
+        <button class="icon-button info-close" id="infoClose" type="button" aria-label="Zamknij informacje">×</button>
+      </div>
+
+      <div class="info-grid">
+        <section>
+          <h3>Pomiar czasu</h3>
+          <ul>
+            <li>Uruchamiaj stoper z okrążeniami.</li>
+            <li>Mierz krótkie przerwy minutnikiem.</li>
+            <li>Korzystaj ze skrótów klawiszowych na PC.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Trening</h3>
+          <ul>
+            <li>Wpisuj własne ćwiczenia, każde w nowej linii.</li>
+            <li>Ustaw czas pracy, przerwy i liczbę rund.</li>
+            <li>Czytaj aktualne ćwiczenie z daleka od monitora.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Wygoda</h3>
+          <ul>
+            <li>Włącz pełny ekran na PC lub telefonie.</li>
+            <li>Używaj odliczania 3-2-1 przed startem.</li>
+            <li>Zablokuj wygaszanie ekranu, jeśli przeglądarka to wspiera.</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </dialog>
 
   <script src="app.js" defer></script>
 </body>

@@ -19,6 +19,10 @@
   };
 
   const elements = {
+    infoToggle: document.getElementById("infoToggle"),
+    footerInfoToggle: document.getElementById("footerInfoToggle"),
+    infoDialog: document.getElementById("infoDialog"),
+    infoClose: document.getElementById("infoClose"),
     themeToggle: document.getElementById("themeToggle"),
     fullscreenToggle: document.getElementById("fullscreenToggle"),
     stopwatchMode: document.getElementById("stopwatchMode"),
@@ -638,7 +642,32 @@
     elements.fullscreenToggle.title = isFullscreen ? "Wyjdź z pełnego ekranu (Esc)" : "Pełny ekran (F)";
   }
 
+  function openInfo() {
+    if (typeof elements.infoDialog.showModal === "function") {
+      elements.infoDialog.showModal();
+    } else {
+      elements.infoDialog.setAttribute("open", "");
+    }
+  }
+
+  function closeInfo() {
+    if (typeof elements.infoDialog.close === "function") {
+      elements.infoDialog.close();
+    } else {
+      elements.infoDialog.removeAttribute("open");
+    }
+  }
+
   function bindEvents() {
+    elements.infoToggle.addEventListener("click", openInfo);
+    elements.footerInfoToggle.addEventListener("click", openInfo);
+    elements.infoClose.addEventListener("click", closeInfo);
+    elements.infoDialog.addEventListener("click", function (event) {
+      if (event.target === elements.infoDialog) {
+        closeInfo();
+      }
+    });
+
     elements.themeToggle.addEventListener("click", function () {
       const nextTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
       setTheme(nextTheme);
