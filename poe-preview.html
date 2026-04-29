@@ -1,0 +1,632 @@
+<!DOCTYPE html><html lang="pl"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stoper</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;family=Outfit:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #f0ece4;
+    --bg-secondary: #e4dfd6;
+    --bg-card: #fffdf8;
+    --text-primary: #2a2520;
+    --text-secondary: #7a756e;
+    --accent: #e05a33;
+    --accent-hover: #c94a26;
+    --accent-glow: rgba(224, 90, 51, 0.25);
+    --border: rgba(42, 37, 32, 0.08);
+    --toggle-bg: #d6d1c8;
+    --toggle-knob: #fffdf8;
+    --shadow-sm: 0 2px 8px rgba(42, 37, 32, 0.06);
+    --shadow-md: 0 8px 32px rgba(42, 37, 32, 0.08);
+    --shadow-lg: 0 16px 48px rgba(42, 37, 32, 0.12);
+    --lap-bg: rgba(42, 37, 32, 0.03);
+    --lap-border: rgba(42, 37, 32, 0.06);
+    --btn-secondary-bg: #e4dfd6;
+    --btn-secondary-hover: #d6d1c8;
+    --transition-speed: 0.4s;
+  }
+
+  html.dark {
+    --bg-primary: #141210;
+    --bg-secondary: #1e1c18;
+    --bg-card: #1e1c18;
+    --text-primary: #f0ece4;
+    --text-secondary: #8a857e;
+    --accent: #f06a43;
+    --accent-hover: #ff7a55;
+    --accent-glow: rgba(240, 106, 67, 0.3);
+    --border: rgba(240, 236, 228, 0.06);
+    --toggle-bg: #2e2a24;
+    --toggle-knob: #f0ece4;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.4);
+    --lap-bg: rgba(240, 236, 228, 0.03);
+    --lap-border: rgba(240, 236, 228, 0.06);
+    --btn-secondary-bg: #2e2a24;
+    --btn-secondary-hover: #3e3a34;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
+    overflow-x: hidden;
+    padding: 20px;
+    position: relative;
+  }
+
+  /* Subtle background pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 20%, var(--accent-glow) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(100, 80, 60, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity var(--transition-speed) ease;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+
+  /* Theme toggle */
+  .theme-toggle-wrapper {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .theme-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: color var(--transition-speed) ease;
+  }
+
+  .theme-toggle {
+    width: 56px;
+    height: 30px;
+    background: var(--toggle-bg);
+    border-radius: 15px;
+    position: relative;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: background var(--transition-speed) ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .theme-toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    background: var(--toggle-knob);
+    border-radius: 50%;
+    transition: transform var(--transition-speed) ease, background var(--transition-speed) ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+
+  html.dark .theme-toggle::after {
+    transform: translateX(26px);
+  }
+
+  .theme-toggle .icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    transition: opacity var(--transition-speed) ease;
+    line-height: 1;
+  }
+
+  .theme-toggle .icon-sun {
+    left: 7px;
+    opacity: 1;
+  }
+
+  .theme-toggle .icon-moon {
+    right: 7px;
+    opacity: 0.4;
+  }
+
+  html.dark .theme-toggle .icon-sun {
+    opacity: 0.4;
+  }
+
+  html.dark .theme-toggle .icon-moon {
+    opacity: 1;
+  }
+
+  /* Title */
+  .title {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    transition: color var(--transition-speed) ease;
+  }
+
+  /* Timer display */
+  .timer-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 48px 32px;
+    width: 100%;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    transition: background var(--transition-speed) ease,
+                border-color var(--transition-speed) ease,
+                box-shadow var(--transition-speed) ease;
+  }
+
+  .timer-display {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(48px, 14vw, 80px);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-primary);
+    letter-spacing: -2px;
+    transition: color var(--transition-speed) ease;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .timer-display .milliseconds {
+    font-size: 0.45em;
+    color: var(--accent);
+    vertical-align: baseline;
+    margin-left: 2px;
+    letter-spacing: 0;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    padding: 18px 36px;
+    transition: all 0.2s ease;
+    letter-spacing: 0.5px;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    user-select: none;
+    -webkit-user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .btn:active::after {
+    opacity: 1;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    flex: 1;
+    max-width: 220px;
+    box-shadow: 0 4px 16px var(--accent-glow);
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px var(--accent-glow);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-primary.running {
+    background: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+  }
+
+  html.dark .btn-primary.running {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+  }
+
+  .btn-primary.running:hover {
+    opacity: 0.9;
+  }
+
+  .btn-secondary {
+    background: var(--btn-secondary-bg);
+    color: var(--text-secondary);
+    padding: 18px 28px;
+  }
+
+  .btn-secondary:hover {
+    background: var(--btn-secondary-hover);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary:active {
+    transform: translateY(0);
+  }
+
+  .btn-secondary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Lap times */
+  .laps-section {
+    width: 100%;
+    max-height: 260px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .laps-section::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .laps-section::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .laps-section::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 2px;
+  }
+
+  .lap-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: var(--lap-bg);
+    border-radius: 12px;
+    margin-bottom: 6px;
+    animation: lapSlide 0.3s ease;
+    transition: background 0.2s ease;
+  }
+
+  .lap-item:hover {
+    background: var(--lap-border);
+  }
+
+  .lap-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .lap-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--text-primary);
+    transition: color var(--transition-speed) ease;
+  }
+
+  .lap-diff {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: color var(--transition-speed) ease;
+  }
+
+  @keyframes lapSlide {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Pulse animation for running state */
+  .pulse-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .pulse-dot.active {
+    opacity: 1;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+
+  /* Entry animation */
+  .container {
+    animation: fadeUp 0.6s ease;
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 400px) {
+    .controls {
+      flex-direction: column;
+      align-items: center;
+    }
+    .btn {
+      width: 100%;
+      max-width: none;
+    }
+    .btn-primary {
+      max-width: none;
+    }
+    .timer-card {
+      padding: 36px 20px;
+      border-radius: 20px;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Theme Toggle -->
+  <div class="theme-toggle-wrapper">
+    <span class="theme-label" id="themeLabel">Jasny</span>
+    <button class="theme-toggle" id="themeToggle" aria-label="Przełącz motyw">
+      <span class="icon icon-sun">☀️</span>
+      <span class="icon icon-moon">🌙</span>
+    </button>
+  </div>
+
+  <div class="container">
+    <div class="title">
+      <span class="pulse-dot" id="pulseDot"></span>Stoper
+    </div>
+
+    <div class="timer-card">
+      <div class="timer-display" id="timerDisplay">
+        00:00<span class="milliseconds">.00</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-secondary" id="btnLap" disabled="">Okrążenie</button>
+      <button class="btn btn-primary" id="btnStartStop">Start</button>
+      <button class="btn btn-secondary" id="btnReset" disabled="">Resetuj</button>
+    </div>
+
+    <div class="laps-section" id="lapsSection"></div>
+  </div>
+
+<script>
+  // ---- Theme management ----
+  const themeToggle = document.getElementById('themeToggle');
+  const themeLabel = document.getElementById('themeLabel');
+
+  function setTheme(dark) {
+    if (dark) {
+      document.documentElement.classList.add('dark');
+      themeLabel.textContent = 'Ciemny';
+    } else {
+      document.documentElement.classList.remove('dark');
+      themeLabel.textContent = 'Jasny';
+    }
+  }
+
+  // Detect system preference
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    setTheme(true);
+  }
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(event) {
+    setTheme(event.matches);
+  });
+
+  themeToggle.addEventListener('click', function() {
+    const isDark = document.documentElement.classList.contains('dark');
+    setTheme(!isDark);
+  });
+
+  // ---- Stopwatch logic ----
+  var startTime = 0;
+  var elapsed = 0;
+  var running = false;
+  var animFrameId = null;
+  var laps = [];
+  var lastLapTime = 0;
+
+  var timerDisplay = document.getElementById('timerDisplay');
+  var btnStartStop = document.getElementById('btnStartStop');
+  var btnReset = document.getElementById('btnReset');
+  var btnLap = document.getElementById('btnLap');
+  var lapsSection = document.getElementById('lapsSection');
+  var pulseDot = document.getElementById('pulseDot');
+
+  function formatTime(ms) {
+    var totalSeconds = Math.floor(ms / 1000);
+    var minutes = Math.floor(totalSeconds / 60);
+    var seconds = totalSeconds % 60;
+    var centiseconds = Math.floor((ms % 1000) / 10);
+
+    var mm = minutes < 10 ? '0' + minutes : String(minutes);
+    var ss = seconds < 10 ? '0' + seconds : String(seconds);
+    var cs = centiseconds < 10 ? '0' + centiseconds : String(centiseconds);
+
+    return { mm: mm, ss: ss, cs: cs };
+  }
+
+  function updateDisplay() {
+    var current = running ? (Date.now() - startTime + elapsed) : elapsed;
+    var t = formatTime(current);
+    timerDisplay.innerHTML = t.mm + ':' + t.ss + '<span class="milliseconds">.' + t.cs + '</span>';
+
+    if (running) {
+      animFrameId = requestAnimationFrame(updateDisplay);
+    }
+  }
+
+  function startTimer() {
+    running = true;
+    startTime = Date.now();
+    btnStartStop.textContent = 'Stop';
+    btnStartStop.classList.add('running');
+    btnReset.disabled = true;
+    btnLap.disabled = false;
+    pulseDot.classList.add('active');
+    animFrameId = requestAnimationFrame(updateDisplay);
+  }
+
+  function stopTimer() {
+    running = false;
+    elapsed += Date.now() - startTime;
+    if (animFrameId) {
+      cancelAnimationFrame(animFrameId);
+    }
+    btnStartStop.textContent = 'Start';
+    btnStartStop.classList.remove('running');
+    btnReset.disabled = false;
+    btnLap.disabled = elapsed === 0;
+    pulseDot.classList.remove('active');
+    updateDisplay();
+  }
+
+  function resetTimer() {
+    running = false;
+    elapsed = 0;
+    startTime = 0;
+    laps = [];
+    lastLapTime = 0;
+    if (animFrameId) {
+      cancelAnimationFrame(animFrameId);
+    }
+    btnStartStop.textContent = 'Start';
+    btnStartStop.classList.remove('running');
+    btnReset.disabled = true;
+    btnLap.disabled = true;
+    pulseDot.classList.remove('active');
+    lapsSection.innerHTML = '';
+    updateDisplay();
+  }
+
+  function addLap() {
+    var current = Date.now() - startTime + elapsed;
+    var lapTime = current - lastLapTime;
+    lastLapTime = current;
+    laps.push({ total: current, lap: lapTime });
+
+    var t = formatTime(current);
+    var lt = formatTime(lapTime);
+    var lapNum = laps.length;
+
+    var lapEl = document.createElement('div');
+    lapEl.className = 'lap-item';
+    lapEl.innerHTML =
+      '<span class="lap-number">#' + (lapNum < 10 ? '0' : '') + lapNum + '</span>' +
+      '<span class="lap-diff">+' + lt.mm + ':' + lt.ss + '.' + lt.cs + '</span>' +
+      '<span class="lap-time">' + t.mm + ':' + t.ss + '.' + t.cs + '</span>';
+
+    if (lapsSection.firstChild) {
+      lapsSection.insertBefore(lapEl, lapsSection.firstChild);
+    } else {
+      lapsSection.appendChild(lapEl);
+    }
+  }
+
+  btnStartStop.addEventListener('click', function() {
+    if (running) {
+      stopTimer();
+    } else {
+      startTimer();
+    }
+  });
+
+  btnReset.addEventListener('click', resetTimer);
+  btnLap.addEventListener('click', addLap);
+
+  // Keyboard shortcut: Space to start/stop
+  document.addEventListener('keydown', function(e) {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (running) {
+        stopTimer();
+      } else {
+        startTimer();
+      }
+    } else if (e.code === 'KeyR' && !running && elapsed > 0) {
+      resetTimer();
+    } else if (e.code === 'KeyL' && running) {
+      addLap();
+    }
+  });
+</script>
+
+
+
+</body></html>

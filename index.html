@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#e05a33">
+  <meta name="description" content="Prosty stoper i minutnik do treningu.">
+  <title>Stoper treningowy</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="pulse-dot" id="pulseDot" aria-hidden="true"></span>
+      <span>Stoper treningowy</span>
+    </div>
+
+    <button class="icon-button theme-toggle" id="themeToggle" type="button" aria-label="Przełącz motyw" aria-pressed="false">
+      <span class="theme-icon theme-icon-light" aria-hidden="true">☀</span>
+      <span class="theme-icon theme-icon-dark" aria-hidden="true">☾</span>
+    </button>
+  </header>
+
+  <main class="app" aria-live="polite">
+    <section class="mode-switch" aria-label="Tryb pracy">
+      <button class="mode-button active" id="stopwatchMode" type="button" aria-pressed="true">Stoper</button>
+      <button class="mode-button" id="timerMode" type="button" aria-pressed="false">Minutnik</button>
+    </section>
+
+    <section class="timer-panel" aria-label="Czas">
+      <p class="mode-label" id="modeLabel">Stoper</p>
+      <div class="timer-display" id="timerDisplay">00:00<span class="milliseconds">.00</span></div>
+      <p class="status-text" id="statusText">Gotowy</p>
+    </section>
+
+    <section class="timer-settings" id="timerSettings" aria-label="Ustawienia minutnika" hidden>
+      <div class="preset-row" aria-label="Szybkie czasy">
+        <button class="preset-button" type="button" data-minutes="1">1 min</button>
+        <button class="preset-button" type="button" data-minutes="2">2 min</button>
+        <button class="preset-button" type="button" data-minutes="3">3 min</button>
+        <button class="preset-button" type="button" data-minutes="5">5 min</button>
+      </div>
+
+      <label class="duration-field" for="durationInput">
+        <span>Czas przerwy</span>
+        <input id="durationInput" type="number" min="5" max="5999" step="5" value="90" inputmode="numeric">
+        <span>sek.</span>
+      </label>
+    </section>
+
+    <section class="controls" aria-label="Sterowanie">
+      <button class="btn btn-secondary" id="btnLap" type="button" disabled>Okrążenie</button>
+      <button class="btn btn-primary" id="btnStartStop" type="button">Start</button>
+      <button class="btn btn-secondary" id="btnReset" type="button" disabled>Resetuj</button>
+    </section>
+
+    <section class="options" aria-label="Opcje">
+      <label class="toggle-row">
+        <input id="soundToggle" type="checkbox" checked>
+        <span>Dźwięk końca przerwy</span>
+      </label>
+      <label class="toggle-row">
+        <input id="wakeLockToggle" type="checkbox" checked>
+        <span>Nie wygaszaj ekranu</span>
+      </label>
+    </section>
+
+    <section class="laps-section" id="lapsSection" aria-label="Okrążenia"></section>
+  </main>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,448 @@
+:root {
+  color-scheme: light;
+  --bg-primary: #f5f1ea;
+  --bg-secondary: #e8e1d6;
+  --bg-card: #fffdf8;
+  --text-primary: #28231f;
+  --text-secondary: #756d64;
+  --accent: #df5a33;
+  --accent-hover: #c84b28;
+  --accent-soft: rgba(223, 90, 51, 0.14);
+  --accent-glow: rgba(223, 90, 51, 0.25);
+  --border: rgba(40, 35, 31, 0.1);
+  --shadow-md: 0 14px 42px rgba(40, 35, 31, 0.1);
+  --shadow-sm: 0 4px 18px rgba(40, 35, 31, 0.08);
+  --btn-secondary-bg: #e7dfd3;
+  --btn-secondary-hover: #d8cec0;
+  --ok: #2f8f5b;
+  --warning: #b57925;
+}
+
+html.dark {
+  color-scheme: dark;
+  --bg-primary: #141210;
+  --bg-secondary: #211e1a;
+  --bg-card: #1d1a17;
+  --text-primary: #f4eee5;
+  --text-secondary: #a39a90;
+  --accent: #f06a43;
+  --accent-hover: #ff7a55;
+  --accent-soft: rgba(240, 106, 67, 0.16);
+  --accent-glow: rgba(240, 106, 67, 0.28);
+  --border: rgba(244, 238, 229, 0.11);
+  --shadow-md: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --shadow-sm: 0 4px 18px rgba(0, 0, 0, 0.22);
+  --btn-secondary-bg: #2e2a24;
+  --btn-secondary-hover: #3b352e;
+  --ok: #67c78f;
+  --warning: #e0a248;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  font-family: Outfit, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(ellipse at 20% 5%, var(--accent-soft), transparent 46%),
+    linear-gradient(145deg, var(--bg-primary), var(--bg-secondary));
+  color: var(--text-primary);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 20px;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.topbar {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-family: "Space Mono", monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.pulse-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.35;
+}
+
+.pulse-dot.active {
+  animation: pulse 1.1s ease-in-out infinite;
+}
+
+.icon-button {
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.theme-toggle {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.theme-icon {
+  position: absolute;
+  font-size: 21px;
+  line-height: 1;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.theme-icon-dark,
+html.dark .theme-icon-light {
+  opacity: 0;
+  transform: scale(0.7) rotate(-20deg);
+}
+
+html.dark .theme-icon-dark {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.app {
+  width: min(100%, 520px);
+  margin: 0 auto;
+  align-self: center;
+  display: grid;
+  gap: 20px;
+}
+
+.mode-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--bg-card) 78%, transparent);
+}
+
+.mode-button,
+.preset-button {
+  border: 0;
+  border-radius: 11px;
+  min-height: 42px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.mode-button.active,
+.preset-button.active {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 8px 24px var(--accent-glow);
+}
+
+.timer-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 34px 24px 30px;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+
+.mode-label,
+.status-text {
+  margin: 0;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.mode-label {
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.timer-display {
+  margin: 16px 0 12px;
+  font-family: "Space Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: clamp(48px, 14vw, 82px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  user-select: none;
+}
+
+.timer-display.warning {
+  color: var(--warning);
+}
+
+.timer-display.done {
+  color: var(--ok);
+}
+
+.milliseconds {
+  color: var(--accent);
+  font-size: 0.44em;
+}
+
+.timer-settings {
+  display: grid;
+  gap: 14px;
+}
+
+.timer-settings[hidden] {
+  display: none;
+}
+
+.preset-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.preset-button {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.duration-field,
+.options {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-card) 82%, transparent);
+}
+
+.duration-field {
+  min-height: 56px;
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: 1fr 84px auto;
+  gap: 12px;
+  align-items: center;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.duration-field input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  padding: 8px 10px;
+  text-align: center;
+  font-family: "Space Mono", monospace;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr 1fr;
+  gap: 12px;
+}
+
+.btn {
+  min-height: 58px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 18px;
+  cursor: pointer;
+  font-weight: 800;
+  transition: transform 0.16s ease, background 0.16s ease, opacity 0.16s ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 8px 28px var(--accent-glow);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn-primary.running {
+  background: var(--text-primary);
+  color: var(--bg-card);
+}
+
+.btn-secondary {
+  background: var(--btn-secondary-bg);
+  color: var(--text-secondary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--btn-secondary-hover);
+  color: var(--text-primary);
+}
+
+.options {
+  padding: 6px 14px;
+  display: grid;
+  gap: 2px;
+}
+
+.toggle-row {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.toggle-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.laps-section {
+  max-height: 260px;
+  overflow-y: auto;
+  display: grid;
+  gap: 7px;
+  scrollbar-width: thin;
+}
+
+.lap-item {
+  display: grid;
+  grid-template-columns: 64px 1fr 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 13px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-card) 76%, transparent);
+  animation: fade-up 0.22s ease;
+}
+
+.lap-number,
+.lap-time,
+.lap-diff {
+  font-family: "Space Mono", monospace;
+}
+
+.lap-number {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lap-time {
+  justify-self: end;
+}
+
+.lap-diff {
+  justify-self: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 520px) {
+  body {
+    padding: 16px;
+  }
+
+  .brand {
+    max-width: 260px;
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+
+  .app {
+    align-self: start;
+    margin-top: 28px;
+  }
+
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .preset-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .duration-field {
+    grid-template-columns: 1fr 78px auto;
+  }
+
+  .lap-item {
+    grid-template-columns: 52px 1fr;
+  }
+
+  .lap-time {
+    grid-column: 2;
+  }
+
+  .lap-diff {
+    grid-column: 2;
+    justify-self: end;
+  }
+}

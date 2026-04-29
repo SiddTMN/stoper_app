@@ -1,0 +1,10 @@
+{
+  "name": "Stoper treningowy",
+  "short_name": "Stoper",
+  "description": "Stoper i minutnik do treningu oraz przerw.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f1ea",
+  "theme_color": "#e05a33",
+  "icons": []
+}
