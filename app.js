@@ -105,7 +105,6 @@
   }
 
   function updateButtons() {
-    const hasTime = state.elapsed > 0 || state.laps.length > 0;
     const isStopwatch = state.mode === "stopwatch";
 
     elements.btnStartStop.textContent = state.running ? "Stop" : "Start";
@@ -363,6 +362,9 @@
         reset();
       } else if (event.code === "KeyL") {
         addLap();
+      } else if (event.code === "KeyT") {
+        const nextTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
+        setTheme(nextTheme);
       } else if (event.code === "Digit1") {
         switchMode("stopwatch");
       } else if (event.code === "Digit2") {

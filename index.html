@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#e05a33">
+  <meta name="theme-color" content="#1f6f78">
   <meta name="description" content="Prosty stoper i minutnik do treningu.">
   <title>Stoper treningowy</title>
   <link rel="manifest" href="manifest.webmanifest">
@@ -19,7 +19,7 @@
       <span>Stoper treningowy</span>
     </div>
 
-    <button class="icon-button theme-toggle" id="themeToggle" type="button" aria-label="Przełącz motyw" aria-pressed="false">
+    <button class="icon-button theme-toggle" id="themeToggle" type="button" aria-label="Przełącz motyw" aria-keyshortcuts="T" aria-pressed="false" title="Przełącz motyw (T)">
       <span class="theme-icon theme-icon-light" aria-hidden="true">☀</span>
       <span class="theme-icon theme-icon-dark" aria-hidden="true">☾</span>
     </button>
@@ -27,8 +27,8 @@
 
   <main class="app" aria-live="polite">
     <section class="mode-switch" aria-label="Tryb pracy">
-      <button class="mode-button active" id="stopwatchMode" type="button" aria-pressed="true">Stoper</button>
-      <button class="mode-button" id="timerMode" type="button" aria-pressed="false">Minutnik</button>
+      <button class="mode-button active" id="stopwatchMode" type="button" aria-keyshortcuts="1" aria-pressed="true" title="Stoper (1)">Stoper</button>
+      <button class="mode-button" id="timerMode" type="button" aria-keyshortcuts="2" aria-pressed="false" title="Minutnik (2)">Minutnik</button>
     </section>
 
     <section class="timer-panel" aria-label="Czas">
@@ -53,9 +53,9 @@
     </section>
 
     <section class="controls" aria-label="Sterowanie">
-      <button class="btn btn-secondary" id="btnLap" type="button" disabled>Okrążenie</button>
-      <button class="btn btn-primary" id="btnStartStop" type="button">Start</button>
-      <button class="btn btn-secondary" id="btnReset" type="button" disabled>Resetuj</button>
+      <button class="btn btn-secondary" id="btnLap" type="button" aria-keyshortcuts="L" title="Okrążenie (L)" disabled>Okrążenie</button>
+      <button class="btn btn-primary" id="btnStartStop" type="button" aria-keyshortcuts="Space" title="Start / stop (Spacja)">Start</button>
+      <button class="btn btn-secondary" id="btnReset" type="button" aria-keyshortcuts="R" title="Resetuj (R)" disabled>Resetuj</button>
     </section>
 
     <section class="options" aria-label="Opcje">
