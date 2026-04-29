@@ -62,7 +62,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -71,7 +72,8 @@ button {
 }
 
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+textarea:focus-visible {
   outline: 4px solid var(--focus);
   outline-offset: 3px;
 }
@@ -154,7 +156,7 @@ html.dark .theme-icon-dark {
 
 .mode-switch {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
   padding: 6px;
   border: 1px solid var(--border);
@@ -230,14 +232,21 @@ html.dark .theme-icon-dark {
   gap: 14px;
 }
 
-.timer-settings[hidden] {
+.timer-settings[hidden],
+.workout-settings[hidden],
+.workout-overview[hidden] {
   display: none;
 }
 
-.preset-row {
+.preset-row,
+.template-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
+}
+
+.template-row {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .preset-button {
@@ -246,13 +255,18 @@ html.dark .theme-icon-dark {
 }
 
 .duration-field,
-.options {
+.number-field,
+.exercise-field,
+.options,
+.shortcut-hints,
+.workout-overview {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: color-mix(in srgb, var(--bg-card) 82%, transparent);
 }
 
-.duration-field {
+.duration-field,
+.number-field {
   min-height: 76px;
   padding: 14px 18px;
   display: grid;
@@ -263,15 +277,115 @@ html.dark .theme-icon-dark {
   font-weight: 700;
 }
 
-.duration-field input {
+.duration-field input,
+.number-field input,
+.exercise-field textarea {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--bg-card);
   color: var(--text-primary);
   padding: 12px 12px;
+}
+
+.duration-field input,
+.number-field input {
   text-align: center;
   font-family: "Space Mono", monospace;
+}
+
+.workout-settings {
+  display: grid;
+  gap: 14px;
+}
+
+.workout-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.number-field {
+  grid-template-columns: 1fr 78px auto;
+}
+
+.exercise-field {
+  display: grid;
+  gap: 10px;
+  padding: 14px 18px;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.exercise-field textarea {
+  min-height: 128px;
+  resize: vertical;
+  color: var(--text-primary);
+  background: var(--bg-card);
+}
+
+.workout-overview {
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.workout-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.current-step {
+  min-height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.current-step.rest {
+  background: var(--btn-secondary-bg);
+  color: var(--text-primary);
+}
+
+.step-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.step-pill {
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 11px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.step-pill.active {
+  border-color: transparent;
+  background: var(--accent);
+  color: white;
+}
+
+.step-pill.done {
+  opacity: 0.52;
+  text-decoration: line-through;
 }
 
 .controls {
@@ -333,6 +447,33 @@ html.dark .theme-icon-dark {
   padding: 8px 18px;
   display: grid;
   gap: 2px;
+}
+
+.shortcut-hints {
+  padding: 10px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 14px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.68;
+}
+
+kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0 7px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: "Space Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .toggle-row {
@@ -471,7 +612,7 @@ html.dark .theme-icon-dark {
   }
 
   .controls {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .btn {
@@ -479,12 +620,35 @@ html.dark .theme-icon-dark {
     font-size: 18px;
   }
 
-  .preset-row {
+  .btn-primary {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .preset-row,
+  .template-row,
+  .workout-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .duration-field {
+  .duration-field,
+  .number-field {
     grid-template-columns: 1fr 78px auto;
+  }
+
+  .exercise-field,
+  .workout-overview {
+    padding: 12px;
+  }
+
+  .current-step {
+    min-height: 50px;
+    font-size: 19px;
+  }
+
+  .shortcut-hints {
+    justify-content: flex-start;
+    font-size: 12px;
   }
 
   .lap-item {

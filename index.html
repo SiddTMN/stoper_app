@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#1f6f78">
-  <meta name="description" content="Prosty stoper i minutnik do treningu.">
+  <meta name="description" content="Stoper, minutnik i prosty planer serii treningowych.">
   <title>Stoper treningowy</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,6 +29,7 @@
     <section class="mode-switch" aria-label="Tryb pracy">
       <button class="mode-button active" id="stopwatchMode" type="button" aria-keyshortcuts="1" aria-pressed="true" title="Stoper (1)">Stoper</button>
       <button class="mode-button" id="timerMode" type="button" aria-keyshortcuts="2" aria-pressed="false" title="Minutnik (2)">Minutnik</button>
+      <button class="mode-button" id="workoutMode" type="button" aria-keyshortcuts="3" aria-pressed="false" title="Trening (3)">Trening</button>
     </section>
 
     <section class="timer-panel" aria-label="Czas">
@@ -52,10 +53,53 @@
       </label>
     </section>
 
+    <section class="workout-settings" id="workoutSettings" aria-label="Plan treningu" hidden>
+      <div class="template-row" aria-label="Szablony ćwiczeń">
+        <button class="preset-button" type="button" data-template="basic">Podstawowy</button>
+        <button class="preset-button" type="button" data-template="core">Core</button>
+        <button class="preset-button" type="button" data-template="mobility">Mobilność</button>
+      </div>
+
+      <div class="workout-grid">
+        <label class="number-field" for="workDurationInput">
+          <span>Praca</span>
+          <input id="workDurationInput" type="number" min="5" max="1800" step="5" value="40" inputmode="numeric">
+          <span>sek.</span>
+        </label>
+        <label class="number-field" for="restDurationInput">
+          <span>Przerwa</span>
+          <input id="restDurationInput" type="number" min="0" max="1800" step="5" value="20" inputmode="numeric">
+          <span>sek.</span>
+        </label>
+        <label class="number-field" for="roundsInput">
+          <span>Rundy</span>
+          <input id="roundsInput" type="number" min="1" max="20" step="1" value="3" inputmode="numeric">
+          <span>razy</span>
+        </label>
+      </div>
+
+      <label class="exercise-field" for="exerciseNamesInput">
+        <span>Ćwiczenia, każde w nowej linii</span>
+        <textarea id="exerciseNamesInput" rows="4" spellcheck="false">Pompki
+Przysiady
+Plank</textarea>
+      </label>
+    </section>
+
+    <section class="workout-overview" id="workoutOverview" aria-label="Przebieg treningu" hidden></section>
+
     <section class="controls" aria-label="Sterowanie">
       <button class="btn btn-secondary" id="btnLap" type="button" aria-keyshortcuts="L" title="Okrążenie (L)" disabled>Okrążenie</button>
       <button class="btn btn-primary" id="btnStartStop" type="button" aria-keyshortcuts="Space" title="Start / stop (Spacja)">Start</button>
       <button class="btn btn-secondary" id="btnReset" type="button" aria-keyshortcuts="R" title="Resetuj (R)" disabled>Resetuj</button>
+    </section>
+
+    <section class="shortcut-hints" aria-label="Skróty klawiszowe">
+      <span><kbd>Spacja</kbd> start/stop</span>
+      <span><kbd>R</kbd> reset</span>
+      <span><kbd>L</kbd> okrążenie</span>
+      <span><kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd> tryb</span>
+      <span><kbd>T</kbd> motyw</span>
     </section>
 
     <section class="options" aria-label="Opcje">

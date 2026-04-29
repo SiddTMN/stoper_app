@@ -1,7 +1,7 @@
 {
   "name": "Stoper treningowy",
   "short_name": "Stoper",
-  "description": "Stoper i minutnik do treningu oraz przerw.",
+  "description": "Stoper, minutnik i prosty planer serii treningowych.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#eef1f2",

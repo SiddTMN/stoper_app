@@ -1,23 +1,28 @@
 # Stoper treningowy
 
-Prosta statyczna aplikacja do odmierzania czasu podczas ćwiczeń: stoper, minutnik przerw, okrążenia, dźwięk końca przerwy i opcja niewygaszania ekranu.
+Statyczna aplikacja do odmierzania czasu podczas ćwiczeń: stoper, minutnik przerw i prosty planer treningu z nazwami ćwiczeń. Działa bez procesu budowania, więc dobrze pasuje do GitHub Pages.
 
 ## Funkcje
 
 - Stoper z okrążeniami i różnicą czasu od poprzedniego okrążenia.
 - Minutnik przerw z presetami 1, 2, 3 i 5 minut oraz własnym czasem w sekundach.
+- Tryb treningu: lista ćwiczeń, czas pracy, czas przerwy i liczba rund.
+- Gotowe szablony ćwiczeń oraz możliwość wpisania własnych nazw, po jednej w linii.
 - Motyw jasny i ciemny, zapamiętywany w przeglądarce.
-- Dźwięk i wibracja po zakończeniu minutnika, jeśli urządzenie i przeglądarka je obsługują.
+- Dźwięk i wibracja po zakończeniu minutnika lub kroku treningu, jeśli urządzenie i przeglądarka je obsługują.
 - Wake Lock, czyli opcja niewygaszania ekranu podczas pomiaru.
 - Service worker i manifest, dzięki którym aplikacja może działać wygodniej na telefonie i częściowo offline.
 
 ## Skróty klawiszowe
+
+Skróty są widoczne również w aplikacji pod głównymi przyciskami.
 
 - `Spacja` - start / stop
 - `R` - reset, gdy pomiar nie trwa
 - `L` - okrążenie w trybie stopera
 - `1` - tryb stopera
 - `2` - tryb minutnika
+- `3` - tryb treningu
 - `T` - przełączenie motywu
 
 ## GitHub Pages

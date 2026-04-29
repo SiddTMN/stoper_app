@@ -4,17 +4,34 @@
     sound: "trainingTimer.sound",
     wakeLock: "trainingTimer.wakeLock",
     duration: "trainingTimer.duration",
+    workDuration: "trainingTimer.workDuration",
+    restDuration: "trainingTimer.restDuration",
+    rounds: "trainingTimer.rounds",
+    exercises: "trainingTimer.exercises",
+  };
+
+  const TEMPLATES = {
+    basic: ["Pompki", "Przysiady", "Plank"],
+    core: ["Plank", "Dead bug", "Mountain climbers", "Side plank"],
+    mobility: ["Krążenia barków", "Przysiad z pauzą", "Wykrok z rotacją", "Rozciąganie bioder"],
   };
 
   const elements = {
     themeToggle: document.getElementById("themeToggle"),
     stopwatchMode: document.getElementById("stopwatchMode"),
     timerMode: document.getElementById("timerMode"),
+    workoutMode: document.getElementById("workoutMode"),
     modeLabel: document.getElementById("modeLabel"),
     timerDisplay: document.getElementById("timerDisplay"),
     statusText: document.getElementById("statusText"),
     timerSettings: document.getElementById("timerSettings"),
+    workoutSettings: document.getElementById("workoutSettings"),
+    workoutOverview: document.getElementById("workoutOverview"),
     durationInput: document.getElementById("durationInput"),
+    workDurationInput: document.getElementById("workDurationInput"),
+    restDurationInput: document.getElementById("restDurationInput"),
+    roundsInput: document.getElementById("roundsInput"),
+    exerciseNamesInput: document.getElementById("exerciseNamesInput"),
     btnLap: document.getElementById("btnLap"),
     btnStartStop: document.getElementById("btnStartStop"),
     btnReset: document.getElementById("btnReset"),
@@ -22,7 +39,8 @@
     pulseDot: document.getElementById("pulseDot"),
     soundToggle: document.getElementById("soundToggle"),
     wakeLockToggle: document.getElementById("wakeLockToggle"),
-    presetButtons: Array.from(document.querySelectorAll(".preset-button")),
+    presetButtons: Array.from(document.querySelectorAll(".preset-row .preset-button")),
+    templateButtons: Array.from(document.querySelectorAll(".template-row .preset-button")),
   };
 
   const state = {
@@ -36,6 +54,15 @@
     frameId: null,
     wakeLock: null,
     audioContext: null,
+    workout: {
+      workDuration: 40 * 1000,
+      restDuration: 20 * 1000,
+      rounds: 3,
+      exercises: TEMPLATES.basic,
+      steps: [],
+      stepIndex: 0,
+      completed: false,
+    },
   };
 
   function readBoolean(key, fallback) {
@@ -43,12 +70,12 @@
     return value === null ? fallback : value === "true";
   }
 
-  function clampDuration(seconds) {
-    const parsed = Number.parseInt(seconds, 10);
+  function clampNumber(value, fallback, min, max) {
+    const parsed = Number.parseInt(value, 10);
     if (!Number.isFinite(parsed)) {
-      return 90;
+      return fallback;
     }
-    return Math.min(5999, Math.max(5, parsed));
+    return Math.min(max, Math.max(min, parsed));
   }
 
   function getSystemTheme() {
@@ -85,17 +112,33 @@
     return Math.max(0, state.duration - currentElapsed());
   }
 
+  function currentWorkoutStep() {
+    return state.workout.steps[state.workout.stepIndex] || null;
+  }
+
+  function workoutRemaining() {
+    const step = currentWorkoutStep();
+    return step ? Math.max(0, step.duration - currentElapsed()) : 0;
+  }
+
   function updateDisplay() {
     const isStopwatch = state.mode === "stopwatch";
-    const value = isStopwatch ? currentElapsed() : timerRemaining();
+    const isTimer = state.mode === "timer";
+    const value = isStopwatch ? currentElapsed() : isTimer ? timerRemaining() : workoutRemaining();
     const warning = !isStopwatch && state.running && value <= 10000;
+    const done = !isStopwatch && value === 0 && !state.running;
 
     elements.timerDisplay.innerHTML = formatTime(value, isStopwatch);
     elements.timerDisplay.classList.toggle("warning", warning);
-    elements.timerDisplay.classList.toggle("done", !isStopwatch && value === 0 && !state.running);
+    elements.timerDisplay.classList.toggle("done", done);
 
-    if (!isStopwatch && state.running && value <= 0) {
+    if (isTimer && state.running && value <= 0) {
       finishTimer();
+      return;
+    }
+
+    if (state.mode === "workout" && state.running && value <= 0) {
+      advanceWorkout();
       return;
     }
 
@@ -106,11 +149,15 @@
 
   function updateButtons() {
     const isStopwatch = state.mode === "stopwatch";
+    const isWorkout = state.mode === "workout";
+    const workoutTouched = isWorkout && (state.elapsed > 0 || state.workout.stepIndex > 0 || state.workout.completed);
+    const canReset = isWorkout ? workoutTouched : state.elapsed > 0 || state.laps.length > 0;
 
     elements.btnStartStop.textContent = state.running ? "Stop" : "Start";
     elements.btnStartStop.classList.toggle("running", state.running);
-    elements.btnReset.disabled = state.running && isStopwatch ? true : state.elapsed === 0 && state.laps.length === 0;
+    elements.btnReset.disabled = state.running && isStopwatch ? true : !canReset;
     elements.btnLap.disabled = !state.running || !isStopwatch;
+    elements.btnLap.hidden = !isStopwatch;
     elements.pulseDot.classList.toggle("active", state.running);
     elements.statusText.textContent = getStatusText();
   }
@@ -121,9 +168,19 @@
       return state.elapsed > 0 ? "Pauza" : "Gotowy";
     }
 
-    if (state.running) return "Przerwa trwa";
-    if (state.elapsed >= state.duration) return "Koniec przerwy";
-    return state.elapsed > 0 ? "Pauza" : "Gotowy do przerwy";
+    if (state.mode === "timer") {
+      if (state.running) return "Przerwa trwa";
+      if (state.elapsed >= state.duration) return "Koniec przerwy";
+      return state.elapsed > 0 ? "Pauza" : "Gotowy do przerwy";
+    }
+
+    const step = currentWorkoutStep();
+    if (state.workout.completed) return "Trening zakończony";
+    if (!step) return "Ustaw plan treningu";
+
+    const action = step.type === "work" ? step.name : `Przerwa po: ${step.name}`;
+    const progress = `Runda ${step.round}/${state.workout.rounds} • ${state.workout.stepIndex + 1}/${state.workout.steps.length}`;
+    return state.running ? `${action} • ${progress}` : `${action} • ${progress}`;
   }
 
   async function requestWakeLock() {
@@ -162,11 +219,19 @@
       state.elapsed = 0;
     }
 
+    if (state.mode === "workout") {
+      if (!state.workout.steps.length || state.workout.completed) {
+        buildWorkoutPlan();
+      }
+      state.workout.completed = false;
+    }
+
     state.running = true;
     state.startTime = Date.now();
     requestWakeLock();
     updateButtons();
     updateDisplay();
+    renderWorkoutOverview();
   }
 
   function stop() {
@@ -188,11 +253,14 @@
     state.elapsed = 0;
     state.laps = [];
     state.lastLapTime = 0;
+    state.workout.stepIndex = 0;
+    state.workout.completed = false;
     cancelFrame();
     releaseWakeLock();
     elements.lapsSection.innerHTML = "";
     updateButtons();
     updateDisplay();
+    renderWorkoutOverview();
   }
 
   function cancelFrame() {
@@ -232,19 +300,30 @@
     reset();
     state.mode = mode;
     const isTimer = mode === "timer";
-    elements.stopwatchMode.classList.toggle("active", !isTimer);
-    elements.timerMode.classList.toggle("active", isTimer);
-    elements.stopwatchMode.setAttribute("aria-pressed", String(!isTimer));
-    elements.timerMode.setAttribute("aria-pressed", String(isTimer));
+    const isWorkout = mode === "workout";
+
+    [
+      [elements.stopwatchMode, mode === "stopwatch"],
+      [elements.timerMode, isTimer],
+      [elements.workoutMode, isWorkout],
+    ].forEach(function ([button, active]) {
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+
     elements.timerSettings.hidden = !isTimer;
-    elements.lapsSection.hidden = isTimer;
-    elements.modeLabel.textContent = isTimer ? "Minutnik" : "Stoper";
+    elements.workoutSettings.hidden = !isWorkout;
+    elements.workoutOverview.hidden = !isWorkout;
+    elements.lapsSection.hidden = mode !== "stopwatch";
+    elements.modeLabel.textContent = isTimer ? "Minutnik" : isWorkout ? "Trening" : "Stoper";
+    buildWorkoutPlan();
     updateButtons();
     updateDisplay();
+    renderWorkoutOverview();
   }
 
   function setDuration(seconds) {
-    const clamped = clampDuration(seconds);
+    const clamped = clampNumber(seconds, 90, 5, 5999);
     state.duration = clamped * 1000;
     elements.durationInput.value = String(clamped);
     localStorage.setItem(STORAGE_KEYS.duration, String(clamped));
@@ -259,12 +338,135 @@
     }
   }
 
+  function readExerciseNames() {
+    const names = elements.exerciseNamesInput.value
+      .split("\n")
+      .map(function (name) {
+        return name.trim();
+      })
+      .filter(Boolean);
+
+    return names.length ? names : TEMPLATES.basic;
+  }
+
+  function saveWorkoutSettings() {
+    state.workout.workDuration = clampNumber(elements.workDurationInput.value, 40, 5, 1800) * 1000;
+    state.workout.restDuration = clampNumber(elements.restDurationInput.value, 20, 0, 1800) * 1000;
+    state.workout.rounds = clampNumber(elements.roundsInput.value, 3, 1, 20);
+    state.workout.exercises = readExerciseNames();
+
+    elements.workDurationInput.value = String(state.workout.workDuration / 1000);
+    elements.restDurationInput.value = String(state.workout.restDuration / 1000);
+    elements.roundsInput.value = String(state.workout.rounds);
+
+    localStorage.setItem(STORAGE_KEYS.workDuration, String(state.workout.workDuration / 1000));
+    localStorage.setItem(STORAGE_KEYS.restDuration, String(state.workout.restDuration / 1000));
+    localStorage.setItem(STORAGE_KEYS.rounds, String(state.workout.rounds));
+    localStorage.setItem(STORAGE_KEYS.exercises, state.workout.exercises.join("\n"));
+
+    if (!state.running) {
+      buildWorkoutPlan();
+      reset();
+    }
+  }
+
+  function buildWorkoutPlan() {
+    const steps = [];
+    const exercises = state.workout.exercises.length ? state.workout.exercises : TEMPLATES.basic;
+
+    for (let round = 1; round <= state.workout.rounds; round += 1) {
+      exercises.forEach(function (name, exerciseIndex) {
+        steps.push({
+          type: "work",
+          name,
+          round,
+          duration: state.workout.workDuration,
+        });
+
+        const isLastExercise = exerciseIndex === exercises.length - 1;
+        const isLastRound = round === state.workout.rounds;
+        if (state.workout.restDuration > 0 && !(isLastExercise && isLastRound)) {
+          steps.push({
+            type: "rest",
+            name,
+            round,
+            duration: state.workout.restDuration,
+          });
+        }
+      });
+    }
+
+    state.workout.steps = steps;
+    state.workout.stepIndex = Math.min(state.workout.stepIndex, Math.max(0, steps.length - 1));
+    renderWorkoutOverview();
+  }
+
+  function advanceWorkout() {
+    playDoneSound(0.12);
+    if ("vibrate" in navigator) {
+      navigator.vibrate(120);
+    }
+
+    if (state.workout.stepIndex >= state.workout.steps.length - 1) {
+      state.elapsed = 0;
+      state.running = false;
+      state.workout.completed = true;
+      cancelFrame();
+      releaseWakeLock();
+      playDoneSound(0.2);
+      if ("vibrate" in navigator) {
+        navigator.vibrate([180, 80, 180]);
+      }
+      updateButtons();
+      updateDisplay();
+      renderWorkoutOverview();
+      return;
+    }
+
+    state.workout.stepIndex += 1;
+    state.elapsed = 0;
+    state.startTime = Date.now();
+    updateButtons();
+    renderWorkoutOverview();
+    updateDisplay();
+  }
+
+  function renderWorkoutOverview() {
+    if (state.mode !== "workout") {
+      return;
+    }
+
+    const steps = state.workout.steps;
+    if (!steps.length) {
+      elements.workoutOverview.innerHTML = "";
+      return;
+    }
+
+    const current = currentWorkoutStep();
+    const doneCount = state.workout.completed ? steps.length : state.workout.stepIndex;
+    elements.workoutOverview.innerHTML = [
+      `<div class="workout-summary"><span>${state.workout.exercises.length} ćw.</span><span>${state.workout.rounds} rundy</span><span>${Math.round(totalWorkoutDuration() / 1000 / 60)} min</span></div>`,
+      `<div class="current-step ${current && current.type === "rest" ? "rest" : "work"}">${state.workout.completed ? "Gotowe" : current ? current.name : "Plan"}</div>`,
+      `<div class="step-list">${steps.map(function (step, index) {
+        const className = index < doneCount ? "done" : index === state.workout.stepIndex && !state.workout.completed ? "active" : "";
+        const label = step.type === "work" ? step.name : "Przerwa";
+        return `<span class="step-pill ${className}">${label}</span>`;
+      }).join("")}</div>`,
+    ].join("");
+  }
+
+  function totalWorkoutDuration() {
+    return state.workout.steps.reduce(function (sum, step) {
+      return sum + step.duration;
+    }, 0);
+  }
+
   function finishTimer() {
     state.elapsed = state.duration;
     state.running = false;
     cancelFrame();
     releaseWakeLock();
-    playDoneSound();
+    playDoneSound(0.2);
     if ("vibrate" in navigator) {
       navigator.vibrate([180, 80, 180]);
     }
@@ -272,7 +474,7 @@
     updateDisplay();
   }
 
-  function playDoneSound() {
+  function playDoneSound(volume) {
     if (!elements.soundToggle.checked) {
       return;
     }
@@ -284,13 +486,14 @@
 
     state.audioContext = state.audioContext || new AudioContext();
     const now = state.audioContext.currentTime;
+    const peak = volume || 0.18;
     [0, 0.18, 0.36].forEach(function (offset) {
       const oscillator = state.audioContext.createOscillator();
       const gain = state.audioContext.createGain();
       oscillator.type = "sine";
       oscillator.frequency.setValueAtTime(880, now + offset);
       gain.gain.setValueAtTime(0.0001, now + offset);
-      gain.gain.exponentialRampToValueAtTime(0.22, now + offset + 0.02);
+      gain.gain.exponentialRampToValueAtTime(peak, now + offset + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.12);
       oscillator.connect(gain);
       gain.connect(state.audioContext.destination);
@@ -313,6 +516,10 @@
       switchMode("timer");
     });
 
+    elements.workoutMode.addEventListener("click", function () {
+      switchMode("workout");
+    });
+
     elements.btnStartStop.addEventListener("click", function () {
       state.running ? stop() : start();
     });
@@ -327,6 +534,18 @@
     elements.presetButtons.forEach(function (button) {
       button.addEventListener("click", function () {
         setDuration(Number(button.dataset.minutes) * 60);
+      });
+    });
+
+    [elements.workDurationInput, elements.restDurationInput, elements.roundsInput, elements.exerciseNamesInput].forEach(function (input) {
+      input.addEventListener("change", saveWorkoutSettings);
+    });
+
+    elements.templateButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        const names = TEMPLATES[button.dataset.template] || TEMPLATES.basic;
+        elements.exerciseNamesInput.value = names.join("\n");
+        saveWorkoutSettings();
       });
     });
 
@@ -351,7 +570,7 @@
     });
 
     document.addEventListener("keydown", function (event) {
-      if (event.target instanceof HTMLInputElement) {
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return;
       }
 
@@ -369,6 +588,8 @@
         switchMode("stopwatch");
       } else if (event.code === "Digit2") {
         switchMode("timer");
+      } else if (event.code === "Digit3") {
+        switchMode("workout");
       }
     });
   }
@@ -385,6 +606,22 @@
     });
   }
 
+  function initWorkoutSettings() {
+    const savedExercises = localStorage.getItem(STORAGE_KEYS.exercises);
+    state.workout.workDuration = clampNumber(localStorage.getItem(STORAGE_KEYS.workDuration), 40, 5, 1800) * 1000;
+    state.workout.restDuration = clampNumber(localStorage.getItem(STORAGE_KEYS.restDuration), 20, 0, 1800) * 1000;
+    state.workout.rounds = clampNumber(localStorage.getItem(STORAGE_KEYS.rounds), 3, 1, 20);
+    state.workout.exercises = savedExercises ? savedExercises.split("\n").map(function (name) {
+      return name.trim();
+    }).filter(Boolean) : TEMPLATES.basic;
+
+    elements.workDurationInput.value = String(state.workout.workDuration / 1000);
+    elements.restDurationInput.value = String(state.workout.restDuration / 1000);
+    elements.roundsInput.value = String(state.workout.rounds);
+    elements.exerciseNamesInput.value = state.workout.exercises.join("\n");
+    buildWorkoutPlan();
+  }
+
   function init() {
     const savedTheme = localStorage.getItem(STORAGE_KEYS.theme);
     setTheme(savedTheme || getSystemTheme());
@@ -392,6 +629,7 @@
     elements.soundToggle.checked = readBoolean(STORAGE_KEYS.sound, true);
     elements.wakeLockToggle.checked = readBoolean(STORAGE_KEYS.wakeLock, true);
     setDuration(localStorage.getItem(STORAGE_KEYS.duration) || 90);
+    initWorkoutSettings();
     bindEvents();
     updateButtons();
     updateDisplay();
