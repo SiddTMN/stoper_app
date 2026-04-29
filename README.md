@@ -8,6 +8,8 @@ Statyczna aplikacja do odmierzania czasu podczas ćwiczeń: stoper, minutnik prz
 - Minutnik przerw z presetami 1, 2, 3 i 5 minut oraz własnym czasem w sekundach.
 - Tryb treningu: lista ćwiczeń, czas pracy, czas przerwy i liczba rund.
 - Gotowe szablony ćwiczeń oraz możliwość wpisania własnych nazw, po jednej w linii.
+- Odliczanie 3-2-1 przed świeżym startem pomiaru, z osobnym przełącznikiem dźwięku.
+- Tryb pełnoekranowy przydatny przy ćwiczeniach z dala od monitora.
 - Motyw jasny i ciemny, zapamiętywany w przeglądarce.
 - Dźwięk i wibracja po zakończeniu minutnika lub kroku treningu, jeśli urządzenie i przeglądarka je obsługują.
 - Wake Lock, czyli opcja niewygaszania ekranu podczas pomiaru.
@@ -23,6 +25,7 @@ Skróty są widoczne również w aplikacji pod głównymi przyciskami.
 - `1` - tryb stopera
 - `2` - tryb minutnika
 - `3` - tryb treningu
+- `F` - pełny ekran
 - `T` - przełączenie motywu
 
 ## GitHub Pages
@@ -41,4 +44,4 @@ sw.js
 README.md
 ```
 
-Po publikacji warto otworzyć stronę raz na telefonie przez HTTPS. Dopiero wtedy funkcje przeglądarkowe takie jak service worker i Wake Lock mają najlepszą szansę działać poprawnie.
+Po publikacji warto otworzyć stronę raz na telefonie przez HTTPS. Dopiero wtedy funkcje przeglądarkowe takie jak service worker, pełny ekran i Wake Lock mają najlepszą szansę działać poprawnie.

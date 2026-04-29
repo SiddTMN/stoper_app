@@ -2,6 +2,8 @@
   const STORAGE_KEYS = {
     theme: "trainingTimer.theme",
     sound: "trainingTimer.sound",
+    countdown: "trainingTimer.countdown",
+    countdownSound: "trainingTimer.countdownSound",
     wakeLock: "trainingTimer.wakeLock",
     duration: "trainingTimer.duration",
     workDuration: "trainingTimer.workDuration",
@@ -18,11 +20,14 @@
 
   const elements = {
     themeToggle: document.getElementById("themeToggle"),
+    fullscreenToggle: document.getElementById("fullscreenToggle"),
     stopwatchMode: document.getElementById("stopwatchMode"),
     timerMode: document.getElementById("timerMode"),
     workoutMode: document.getElementById("workoutMode"),
     modeLabel: document.getElementById("modeLabel"),
     timerDisplay: document.getElementById("timerDisplay"),
+    countdownOverlay: document.getElementById("countdownOverlay"),
+    countdownValue: document.getElementById("countdownValue"),
     statusText: document.getElementById("statusText"),
     timerSettings: document.getElementById("timerSettings"),
     workoutSettings: document.getElementById("workoutSettings"),
@@ -38,6 +43,8 @@
     lapsSection: document.getElementById("lapsSection"),
     pulseDot: document.getElementById("pulseDot"),
     soundToggle: document.getElementById("soundToggle"),
+    countdownToggle: document.getElementById("countdownToggle"),
+    countdownSoundToggle: document.getElementById("countdownSoundToggle"),
     wakeLockToggle: document.getElementById("wakeLockToggle"),
     presetButtons: Array.from(document.querySelectorAll(".preset-row .preset-button")),
     templateButtons: Array.from(document.querySelectorAll(".template-row .preset-button")),
@@ -52,6 +59,9 @@
     laps: [],
     lastLapTime: 0,
     frameId: null,
+    countdownTimerId: null,
+    countdownRunning: false,
+    countdownRemaining: 3,
     wakeLock: null,
     audioContext: null,
     workout: {
@@ -162,16 +172,20 @@
     const workoutTouched = isWorkout && (state.elapsed > 0 || state.workout.stepIndex > 0 || state.workout.completed);
     const canReset = isWorkout ? workoutTouched : state.elapsed > 0 || state.laps.length > 0;
 
-    elements.btnStartStop.textContent = state.running ? "Stop" : "Start";
-    elements.btnStartStop.classList.toggle("running", state.running);
+    elements.btnStartStop.textContent = state.running || state.countdownRunning ? "Stop" : "Start";
+    elements.btnStartStop.classList.toggle("running", state.running || state.countdownRunning);
     elements.btnReset.disabled = state.running && isStopwatch ? true : !canReset;
     elements.btnLap.disabled = !state.running || !isStopwatch;
     elements.btnLap.hidden = !isStopwatch;
-    elements.pulseDot.classList.toggle("active", state.running);
+    elements.pulseDot.classList.toggle("active", state.running || state.countdownRunning);
     elements.statusText.textContent = getStatusText();
   }
 
   function getStatusText() {
+    if (state.countdownRunning) {
+      return `Start za ${state.countdownRemaining}`;
+    }
+
     if (state.mode === "stopwatch") {
       if (state.running) return "Pomiar trwa";
       return state.elapsed > 0 ? "Pauza" : "Gotowy";
@@ -219,7 +233,7 @@
     }
   }
 
-  function start() {
+  function start(skipCountdown) {
     if (state.running) {
       return;
     }
@@ -235,6 +249,11 @@
       state.workout.completed = false;
     }
 
+    if (!skipCountdown && shouldStartWithCountdown()) {
+      beginCountdown();
+      return;
+    }
+
     state.running = true;
     state.startTime = Date.now();
     requestWakeLock();
@@ -244,6 +263,13 @@
   }
 
   function stop() {
+    if (state.countdownRunning) {
+      cancelCountdown();
+      releaseWakeLock();
+      updateButtons();
+      return;
+    }
+
     if (!state.running) {
       return;
     }
@@ -258,6 +284,7 @@
 
   function reset() {
     state.running = false;
+    cancelCountdown();
     state.startTime = 0;
     state.elapsed = 0;
     state.laps = [];
@@ -277,6 +304,59 @@
       cancelAnimationFrame(state.frameId);
       state.frameId = null;
     }
+  }
+
+  function shouldStartWithCountdown() {
+    if (!elements.countdownToggle.checked || state.countdownRunning) {
+      return false;
+    }
+
+    if (state.mode === "workout") {
+      return state.elapsed === 0 && state.workout.stepIndex === 0 && !state.workout.completed;
+    }
+
+    return state.elapsed === 0;
+  }
+
+  function beginCountdown() {
+    state.countdownRunning = true;
+    state.countdownRemaining = 3;
+    showCountdown();
+    playCountdownSound();
+    requestWakeLock();
+    updateButtons();
+
+    state.countdownTimerId = window.setInterval(function () {
+      state.countdownRemaining -= 1;
+
+      if (state.countdownRemaining <= 0) {
+        cancelCountdown();
+        start(true);
+        return;
+      }
+
+      showCountdown();
+      playCountdownSound();
+      updateButtons();
+    }, 1000);
+  }
+
+  function showCountdown() {
+    elements.countdownValue.textContent = String(state.countdownRemaining);
+    elements.countdownOverlay.hidden = false;
+    elements.countdownOverlay.classList.remove("pop");
+    void elements.countdownOverlay.offsetWidth;
+    elements.countdownOverlay.classList.add("pop");
+  }
+
+  function cancelCountdown() {
+    if (state.countdownTimerId !== null) {
+      window.clearInterval(state.countdownTimerId);
+      state.countdownTimerId = null;
+    }
+
+    state.countdownRunning = false;
+    elements.countdownOverlay.hidden = true;
   }
 
   function addLap() {
@@ -514,11 +594,58 @@
     });
   }
 
+  function playCountdownSound() {
+    if (!elements.countdownSoundToggle.checked) {
+      return;
+    }
+
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) {
+      return;
+    }
+
+    state.audioContext = state.audioContext || new AudioContext();
+    const now = state.audioContext.currentTime;
+    const oscillator = state.audioContext.createOscillator();
+    const gain = state.audioContext.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(state.countdownRemaining === 1 ? 980 : 740, now);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.16, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+    oscillator.connect(gain);
+    gain.connect(state.audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.18);
+  }
+
+  async function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch (_error) {
+        return;
+      }
+    } else {
+      await document.exitFullscreen();
+    }
+  }
+
+  function updateFullscreenButton() {
+    const isFullscreen = Boolean(document.fullscreenElement);
+    elements.fullscreenToggle.setAttribute("aria-pressed", String(isFullscreen));
+    elements.fullscreenToggle.textContent = isFullscreen ? "ESC" : "FS";
+    elements.fullscreenToggle.title = isFullscreen ? "Wyjdź z pełnego ekranu (Esc)" : "Pełny ekran (F)";
+  }
+
   function bindEvents() {
     elements.themeToggle.addEventListener("click", function () {
       const nextTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
       setTheme(nextTheme);
     });
+
+    elements.fullscreenToggle.addEventListener("click", toggleFullscreen);
+    document.addEventListener("fullscreenchange", updateFullscreenButton);
 
     elements.stopwatchMode.addEventListener("click", function () {
       switchMode("stopwatch");
@@ -533,7 +660,7 @@
     });
 
     elements.btnStartStop.addEventListener("click", function () {
-      state.running ? stop() : start();
+      state.running || state.countdownRunning ? stop() : start();
     });
 
     elements.btnReset.addEventListener("click", reset);
@@ -565,6 +692,19 @@
       localStorage.setItem(STORAGE_KEYS.sound, String(elements.soundToggle.checked));
     });
 
+    elements.countdownToggle.addEventListener("change", function () {
+      localStorage.setItem(STORAGE_KEYS.countdown, String(elements.countdownToggle.checked));
+      if (!elements.countdownToggle.checked) {
+        cancelCountdown();
+        releaseWakeLock();
+        updateButtons();
+      }
+    });
+
+    elements.countdownSoundToggle.addEventListener("change", function () {
+      localStorage.setItem(STORAGE_KEYS.countdownSound, String(elements.countdownSoundToggle.checked));
+    });
+
     elements.wakeLockToggle.addEventListener("change", function () {
       localStorage.setItem(STORAGE_KEYS.wakeLock, String(elements.wakeLockToggle.checked));
       if (!elements.wakeLockToggle.checked) {
@@ -588,7 +728,7 @@
 
       if (event.code === "Space") {
         event.preventDefault();
-        state.running ? stop() : start();
+        state.running || state.countdownRunning ? stop() : start();
       } else if (event.code === "KeyR" && !state.running) {
         reset();
       } else if (event.code === "KeyL") {
@@ -596,6 +736,8 @@
       } else if (event.code === "KeyT") {
         const nextTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
         setTheme(nextTheme);
+      } else if (event.code === "KeyF") {
+        toggleFullscreen();
       } else if (event.code === "Digit1") {
         switchMode("stopwatch");
       } else if (event.code === "Digit2") {
@@ -639,12 +781,15 @@
     setTheme(savedTheme || getSystemTheme());
 
     elements.soundToggle.checked = readBoolean(STORAGE_KEYS.sound, true);
+    elements.countdownToggle.checked = readBoolean(STORAGE_KEYS.countdown, true);
+    elements.countdownSoundToggle.checked = readBoolean(STORAGE_KEYS.countdownSound, true);
     elements.wakeLockToggle.checked = readBoolean(STORAGE_KEYS.wakeLock, true);
     setDuration(localStorage.getItem(STORAGE_KEYS.duration) || 90);
     initWorkoutSettings();
     bindEvents();
     updateButtons();
     updateDisplay();
+    updateFullscreenButton();
     registerServiceWorker();
   }
 

@@ -19,10 +19,13 @@
       <span>Stoper treningowy</span>
     </div>
 
-    <button class="icon-button theme-toggle" id="themeToggle" type="button" aria-label="Przełącz motyw" aria-keyshortcuts="T" aria-pressed="false" title="Przełącz motyw (T)">
-      <span class="theme-icon theme-icon-light" aria-hidden="true">☀</span>
-      <span class="theme-icon theme-icon-dark" aria-hidden="true">☾</span>
-    </button>
+    <div class="topbar-actions">
+      <button class="icon-button fullscreen-toggle" id="fullscreenToggle" type="button" aria-label="Przełącz pełny ekran" aria-keyshortcuts="F" aria-pressed="false" title="Pełny ekran (F)">FS</button>
+      <button class="icon-button theme-toggle" id="themeToggle" type="button" aria-label="Przełącz motyw" aria-keyshortcuts="T" aria-pressed="false" title="Przełącz motyw (T)">
+        <span class="theme-icon theme-icon-light" aria-hidden="true">☀</span>
+        <span class="theme-icon theme-icon-dark" aria-hidden="true">☾</span>
+      </button>
+    </div>
   </header>
 
   <main class="app" aria-live="polite">
@@ -36,6 +39,9 @@
       <p class="mode-label" id="modeLabel">Stoper</p>
       <div class="timer-display" id="timerDisplay">00:00<span class="milliseconds">.00</span></div>
       <p class="status-text" id="statusText">Gotowy</p>
+      <div class="countdown-overlay" id="countdownOverlay" hidden>
+        <span id="countdownValue">3</span>
+      </div>
     </section>
 
     <section class="timer-settings" id="timerSettings" aria-label="Ustawienia minutnika" hidden>
@@ -99,6 +105,7 @@ Plank</textarea>
       <span><kbd>R</kbd> reset</span>
       <span><kbd>L</kbd> okrążenie</span>
       <span><kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd> tryb</span>
+      <span><kbd>F</kbd> pełny ekran</span>
       <span><kbd>T</kbd> motyw</span>
     </section>
 
@@ -106,6 +113,14 @@ Plank</textarea>
       <label class="toggle-row">
         <input id="soundToggle" type="checkbox" checked>
         <span>Dźwięk końca przerwy</span>
+      </label>
+      <label class="toggle-row">
+        <input id="countdownToggle" type="checkbox" checked>
+        <span>Odliczanie 3-2-1 przed startem</span>
+      </label>
+      <label class="toggle-row">
+        <input id="countdownSoundToggle" type="checkbox" checked>
+        <span>Dźwięk odliczania</span>
       </label>
       <label class="toggle-row">
         <input id="wakeLockToggle" type="checkbox" checked>

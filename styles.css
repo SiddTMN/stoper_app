@@ -87,6 +87,12 @@ textarea:focus-visible {
   gap: 16px;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -126,6 +132,12 @@ textarea:focus-visible {
   position: relative;
   display: grid;
   place-items: center;
+}
+
+.fullscreen-toggle {
+  font-family: "Space Mono", monospace;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .theme-icon {
@@ -183,12 +195,40 @@ html.dark .theme-icon-dark {
 }
 
 .timer-panel {
+  position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 48px 36px 42px;
   text-align: center;
   box-shadow: var(--shadow-md);
+}
+
+.countdown-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--bg-card) 86%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+.countdown-overlay[hidden] {
+  display: none;
+}
+
+.countdown-overlay span {
+  font-family: "Space Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: clamp(140px, 22vw, 280px);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.countdown-overlay.pop span {
+  animation: countdown-pop 0.34s ease;
 }
 
 .mode-label,
@@ -605,6 +645,26 @@ kbd {
   }
 }
 
+@keyframes countdown-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.78);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+:fullscreen body,
+body:fullscreen {
+  background: linear-gradient(145deg, var(--bg-primary), var(--bg-secondary));
+}
+
+:fullscreen .app {
+  align-self: center;
+}
+
 @media (max-width: 520px) {
   body {
     padding: 16px;
@@ -614,6 +674,11 @@ kbd {
     max-width: 260px;
     font-size: 12px;
     letter-spacing: 2px;
+  }
+
+  .icon-button {
+    width: 52px;
+    height: 52px;
   }
 
   .app {
@@ -628,6 +693,10 @@ kbd {
 
   .timer-display {
     font-size: clamp(52px, 17vw, 76px);
+  }
+
+  .countdown-overlay span {
+    font-size: clamp(120px, 42vw, 210px);
   }
 
   .mode-button,
