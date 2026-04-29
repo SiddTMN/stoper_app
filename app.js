@@ -104,6 +104,15 @@
       : `${mm}:${ss}`;
   }
 
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   function currentElapsed() {
     return state.running ? Date.now() - state.startTime + state.elapsed : state.elapsed;
   }
@@ -444,13 +453,16 @@
 
     const current = currentWorkoutStep();
     const doneCount = state.workout.completed ? steps.length : state.workout.stepIndex;
+    const currentTitle = state.workout.completed ? "Gotowe" : current && current.type === "rest" ? "Przerwa" : current ? current.name : "Plan";
+    const currentDetail = state.workout.completed ? "Trening zakończony" : current && current.type === "rest" ? `Po: ${current.name}` : current ? `Runda ${current.round}/${state.workout.rounds}` : "";
+
     elements.workoutOverview.innerHTML = [
       `<div class="workout-summary"><span>${state.workout.exercises.length} ćw.</span><span>${state.workout.rounds} rundy</span><span>${Math.round(totalWorkoutDuration() / 1000 / 60)} min</span></div>`,
-      `<div class="current-step ${current && current.type === "rest" ? "rest" : "work"}">${state.workout.completed ? "Gotowe" : current ? current.name : "Plan"}</div>`,
+      `<div class="current-step ${current && current.type === "rest" ? "rest" : "work"}"><span class="current-step-title">${escapeHtml(currentTitle)}</span><span class="current-step-detail">${escapeHtml(currentDetail)}</span></div>`,
       `<div class="step-list">${steps.map(function (step, index) {
         const className = index < doneCount ? "done" : index === state.workout.stepIndex && !state.workout.completed ? "active" : "";
         const label = step.type === "work" ? step.name : "Przerwa";
-        return `<span class="step-pill ${className}">${label}</span>`;
+        return `<span class="step-pill ${className}">${escapeHtml(label)}</span>`;
       }).join("")}</div>`,
     ].join("");
   }

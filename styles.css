@@ -325,9 +325,9 @@ html.dark .theme-icon-dark {
 }
 
 .workout-overview {
-  padding: 14px;
+  padding: 18px;
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .workout-summary {
@@ -342,15 +342,30 @@ html.dark .theme-icon-dark {
 }
 
 .current-step {
-  min-height: 58px;
+  min-height: clamp(180px, 24vh, 300px);
+  padding: 20px;
   display: grid;
+  gap: 10px;
   place-items: center;
   border-radius: 8px;
   background: var(--accent);
   color: white;
-  font-size: 22px;
   font-weight: 800;
   text-align: center;
+}
+
+.current-step-title {
+  max-width: 100%;
+  font-size: clamp(72px, 10vw, 150px);
+  line-height: 0.95;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.current-step-detail {
+  color: color-mix(in srgb, currentColor 78%, transparent);
+  font-size: clamp(18px, 2vw, 28px);
+  line-height: 1.1;
 }
 
 .current-step.rest {
@@ -557,6 +572,15 @@ kbd {
     min-height: 104px;
     font-size: 22px;
   }
+
+  .current-step {
+    min-height: clamp(240px, 28vh, 380px);
+    padding: 28px;
+  }
+
+  .current-step-title {
+    font-size: clamp(104px, 8.5vw, 168px);
+  }
 }
 
 @keyframes pulse {
@@ -642,8 +666,16 @@ kbd {
   }
 
   .current-step {
-    min-height: 50px;
-    font-size: 19px;
+    min-height: clamp(150px, 26vh, 240px);
+    padding: 16px 12px;
+  }
+
+  .current-step-title {
+    font-size: clamp(46px, 15vw, 78px);
+  }
+
+  .current-step-detail {
+    font-size: clamp(15px, 4vw, 20px);
   }
 
   .shortcut-hints {
