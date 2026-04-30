@@ -80,6 +80,10 @@
       steps: [],
       stepIndex: 0,
       completed: false,
+      summary: {
+        label: "3 ćw.",
+        roundsLabel: "3 rundy",
+      },
     },
   };
 
@@ -210,7 +214,7 @@
     if (state.workout.completed) return "Trening zakończony";
     if (!step) return "Ustaw plan treningu";
 
-    const progress = `Runda ${step.round}/${state.workout.rounds} • ${state.workout.stepIndex + 1}/${state.workout.steps.length}`;
+    const progress = `${step.roundLabel} • ${state.workout.stepIndex + 1}/${state.workout.steps.length}`;
     const phase = state.running ? "Pomiar trwa" : state.elapsed > 0 ? "Pauza" : "Gotowy";
     return `${phase} • ${progress}`;
   }
@@ -234,9 +238,7 @@
       detail = "Trening zako\u0144czony";
     } else if (step) {
       title = isRest ? "Przerwa" : step.name;
-      detail = isRest
-        ? `Po: ${step.name} • Runda ${step.round}/${state.workout.rounds}`
-        : `Runda ${step.round}/${state.workout.rounds}`;
+      detail = isRest ? `Po: ${step.name} • ${step.roundLabel}` : step.roundLabel;
     }
 
     elements.workoutFocus.classList.toggle("rest", Boolean(isRest));
@@ -477,6 +479,40 @@
     return names.length ? names : TEMPLATES.basic;
   }
 
+  function parseWorkoutSequences(lines) {
+    const source = lines.length ? lines : TEMPLATES.basic;
+    const sequenceMode = source.some(function (line) {
+      return line.includes(";");
+    });
+
+    if (!sequenceMode) {
+      return {
+        sequenceMode: false,
+        sequences: [source],
+      };
+    }
+
+    const sequences = source.map(function (line) {
+      return line.split(";").map(function (name) {
+        return name.trim();
+      }).filter(Boolean);
+    }).filter(function (sequence) {
+      return sequence.length > 0;
+    });
+
+    return {
+      sequenceMode: true,
+      sequences: sequences.length ? sequences : [TEMPLATES.basic],
+    };
+  }
+
+  function pluralizePolish(count, one, few, many) {
+    if (count === 1) return one;
+    const lastDigit = count % 10;
+    const lastTwoDigits = count % 100;
+    return lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 12 || lastTwoDigits > 14) ? few : many;
+  }
+
   function saveWorkoutSettings() {
     state.workout.workDuration = clampNumber(elements.workDurationInput.value, 40, 5, 1800) * 1000;
     state.workout.restDuration = clampNumber(elements.restDurationInput.value, 20, 0, 1800) * 1000;
@@ -500,31 +536,50 @@
 
   function buildWorkoutPlan() {
     const steps = [];
-    const exercises = state.workout.exercises.length ? state.workout.exercises : TEMPLATES.basic;
+    const plan = parseWorkoutSequences(state.workout.exercises);
+    const units = [];
 
-    for (let round = 1; round <= state.workout.rounds; round += 1) {
-      exercises.forEach(function (name, exerciseIndex) {
+    for (let repeat = 1; repeat <= state.workout.rounds; repeat += 1) {
+      plan.sequences.forEach(function (exercises, sequenceIndex) {
+        const roundLabel = plan.sequenceMode
+          ? `Sekwencja ${sequenceIndex + 1}/${plan.sequences.length}, seria ${repeat}/${state.workout.rounds}`
+          : `Runda ${repeat}/${state.workout.rounds}`;
+
+        units.push({ exercises, roundLabel });
+      });
+    }
+
+    units.forEach(function (unit, unitIndex) {
+      unit.exercises.forEach(function (name, exerciseIndex) {
         steps.push({
           type: "work",
           name,
-          round,
+          round: unitIndex + 1,
+          roundLabel: unit.roundLabel,
           duration: state.workout.workDuration,
         });
 
-        const isLastExercise = exerciseIndex === exercises.length - 1;
-        const isLastRound = round === state.workout.rounds;
-        if (state.workout.restDuration > 0 && !(isLastExercise && isLastRound)) {
+        const isLastExercise = exerciseIndex === unit.exercises.length - 1;
+        const isLastUnit = unitIndex === units.length - 1;
+        if (state.workout.restDuration > 0 && !(isLastExercise && isLastUnit)) {
           steps.push({
             type: "rest",
             name,
-            round,
+            round: unitIndex + 1,
+            roundLabel: unit.roundLabel,
             duration: state.workout.restDuration,
           });
         }
       });
-    }
+    });
 
     state.workout.steps = steps;
+    state.workout.summary = {
+      label: plan.sequenceMode ? `${plan.sequences.length} sekw.` : `${plan.sequences[0].length} ćw.`,
+      roundsLabel: plan.sequenceMode
+        ? `${state.workout.rounds} ${pluralizePolish(state.workout.rounds, "seria", "serie", "serii")}`
+        : `${state.workout.rounds} ${pluralizePolish(state.workout.rounds, "runda", "rundy", "rund")}`,
+    };
     state.workout.stepIndex = Math.min(state.workout.stepIndex, Math.max(0, steps.length - 1));
     renderWorkoutOverview();
   }
@@ -570,14 +625,9 @@
       return;
     }
 
-    const current = currentWorkoutStep();
     const doneCount = state.workout.completed ? steps.length : state.workout.stepIndex;
-    const currentTitle = state.workout.completed ? "Gotowe" : current && current.type === "rest" ? "Przerwa" : current ? current.name : "Plan";
-    const currentDetail = state.workout.completed ? "Trening zakończony" : current && current.type === "rest" ? `Po: ${current.name}` : current ? `Runda ${current.round}/${state.workout.rounds}` : "";
-
     elements.workoutOverview.innerHTML = [
-      `<div class="workout-summary"><span>${state.workout.exercises.length} ćw.</span><span>${state.workout.rounds} rundy</span><span>${Math.round(totalWorkoutDuration() / 1000 / 60)} min</span></div>`,
-      `<div class="current-step ${current && current.type === "rest" ? "rest" : "work"}"><span class="current-step-title">${escapeHtml(currentTitle)}</span><span class="current-step-detail">${escapeHtml(currentDetail)}</span></div>`,
+      `<div class="workout-summary"><span>${state.workout.summary.label}</span><span>${state.workout.summary.roundsLabel}</span><span>${Math.round(totalWorkoutDuration() / 1000 / 60)} min</span></div>`,
       `<div class="step-list">${steps.map(function (step, index) {
         const className = index < doneCount ? "done" : index === state.workout.stepIndex && !state.workout.completed ? "active" : "";
         const label = step.type === "work" ? step.name : "Przerwa";
@@ -841,6 +891,7 @@
   }
 
   function init() {
+    document.body.dataset.mode = state.mode;
     const savedTheme = localStorage.getItem(STORAGE_KEYS.theme);
     setTheme(savedTheme || getSystemTheme());
 

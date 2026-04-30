@@ -49,6 +49,12 @@
       </div>
     </section>
 
+    <section class="controls" aria-label="Sterowanie">
+      <button class="btn btn-secondary" id="btnLap" type="button" aria-keyshortcuts="L" title="Okr&#261;&#380;enie (L)" disabled>Okr&#261;&#380;enie</button>
+      <button class="btn btn-primary" id="btnStartStop" type="button" aria-keyshortcuts="Space" title="Start / stop (Spacja)">Start</button>
+      <button class="btn btn-secondary" id="btnReset" type="button" aria-keyshortcuts="R" title="Resetuj (R)" disabled>Resetuj</button>
+    </section>
+
     <section class="timer-settings" id="timerSettings" aria-label="Ustawienia minutnika" hidden>
       <div class="preset-row" aria-label="Szybkie czasy">
         <button class="preset-button" type="button" data-minutes="1">1 min</button>
@@ -83,14 +89,14 @@
           <span>sek.</span>
         </label>
         <label class="number-field" for="roundsInput">
-          <span>Rundy</span>
+          <span>Rundy/serie</span>
           <input id="roundsInput" type="number" min="1" max="20" step="1" value="3" inputmode="numeric">
           <span>razy</span>
         </label>
       </div>
 
       <label class="exercise-field" for="exerciseNamesInput">
-        <span>Ćwiczenia, każde w nowej linii</span>
+        <span>Ćwiczenia: osobno w liniach albo sekwencje po średniku</span>
         <textarea id="exerciseNamesInput" rows="4" spellcheck="false">Pompki
 Przysiady
 Plank</textarea>
@@ -98,12 +104,6 @@ Plank</textarea>
     </section>
 
     <section class="workout-overview" id="workoutOverview" aria-label="Przebieg treningu" hidden></section>
-
-    <section class="controls" aria-label="Sterowanie">
-      <button class="btn btn-secondary" id="btnLap" type="button" aria-keyshortcuts="L" title="Okrążenie (L)" disabled>Okrążenie</button>
-      <button class="btn btn-primary" id="btnStartStop" type="button" aria-keyshortcuts="Space" title="Start / stop (Spacja)">Start</button>
-      <button class="btn btn-secondary" id="btnReset" type="button" aria-keyshortcuts="R" title="Resetuj (R)" disabled>Resetuj</button>
-    </section>
 
     <section class="shortcut-hints" aria-label="Skróty klawiszowe">
       <span><kbd>Spacja</kbd> start/stop</span>
