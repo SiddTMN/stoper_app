@@ -210,6 +210,45 @@ html.dark .theme-icon-dark {
   box-shadow: var(--shadow-md);
 }
 
+.timer-panel.workout-timer {
+  padding-top: clamp(28px, 5vw, 48px);
+}
+
+.workout-focus {
+  max-width: 100%;
+  margin: 16px auto 0;
+  display: grid;
+  gap: 8px;
+  place-items: center;
+  color: var(--text-primary);
+}
+
+.workout-focus[hidden] {
+  display: none;
+}
+
+.workout-focus-title {
+  max-width: 100%;
+  color: var(--accent);
+  font-size: clamp(40px, 8vw, 86px);
+  font-weight: 800;
+  line-height: 0.98;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.workout-focus-detail {
+  max-width: 100%;
+  color: var(--text-secondary);
+  font-size: clamp(16px, 2vw, 24px);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.workout-focus.rest .workout-focus-title {
+  color: var(--text-secondary);
+}
+
 .countdown-overlay {
   position: absolute;
   inset: 0;
@@ -258,6 +297,10 @@ html.dark .theme-icon-dark {
   line-height: 1;
   letter-spacing: 0;
   user-select: none;
+}
+
+.workout-timer .timer-display {
+  margin-top: 16px;
 }
 
 .timer-display.warning {
@@ -398,6 +441,10 @@ html.dark .theme-icon-dark {
   color: white;
   font-weight: 800;
   text-align: center;
+}
+
+.workout-overview .current-step {
+  display: none;
 }
 
 .current-step-title {
@@ -818,6 +865,19 @@ body:fullscreen {
     font-size: clamp(52px, 17vw, 76px);
   }
 
+  .workout-focus {
+    margin-top: 12px;
+    gap: 6px;
+  }
+
+  .workout-focus-title {
+    font-size: clamp(34px, 13vw, 58px);
+  }
+
+  .workout-focus-detail {
+    font-size: clamp(14px, 4vw, 18px);
+  }
+
   .countdown-overlay span {
     font-size: clamp(120px, 42vw, 210px);
   }
@@ -899,5 +959,34 @@ body:fullscreen {
   .lap-diff {
     grid-column: 2;
     justify-self: end;
+  }
+}
+
+@media (max-height: 760px) {
+  .app {
+    align-self: start;
+    gap: 16px;
+  }
+
+  .timer-panel {
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+
+  .timer-panel.workout-timer {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  .workout-focus-title {
+    font-size: clamp(34px, 7vh, 64px);
+  }
+
+  .workout-focus-detail {
+    font-size: clamp(14px, 2.4vh, 20px);
+  }
+
+  .workout-timer .timer-display {
+    font-size: clamp(54px, 12vh, 96px);
   }
 }

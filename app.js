@@ -28,8 +28,12 @@
     stopwatchMode: document.getElementById("stopwatchMode"),
     timerMode: document.getElementById("timerMode"),
     workoutMode: document.getElementById("workoutMode"),
+    timerPanel: document.getElementById("timerPanel"),
     modeLabel: document.getElementById("modeLabel"),
     timerDisplay: document.getElementById("timerDisplay"),
+    workoutFocus: document.getElementById("workoutFocus"),
+    workoutFocusTitle: document.getElementById("workoutFocusTitle"),
+    workoutFocusDetail: document.getElementById("workoutFocusDetail"),
     countdownOverlay: document.getElementById("countdownOverlay"),
     countdownValue: document.getElementById("countdownValue"),
     statusText: document.getElementById("statusText"),
@@ -182,6 +186,7 @@
     elements.btnLap.disabled = !state.running || !isStopwatch;
     elements.btnLap.hidden = !isStopwatch;
     elements.pulseDot.classList.toggle("active", state.running || state.countdownRunning);
+    updateWorkoutFocus();
     elements.statusText.textContent = getStatusText();
   }
 
@@ -205,9 +210,38 @@
     if (state.workout.completed) return "Trening zakończony";
     if (!step) return "Ustaw plan treningu";
 
-    const action = step.type === "work" ? step.name : `Przerwa po: ${step.name}`;
     const progress = `Runda ${step.round}/${state.workout.rounds} • ${state.workout.stepIndex + 1}/${state.workout.steps.length}`;
-    return state.running ? `${action} • ${progress}` : `${action} • ${progress}`;
+    const phase = state.running ? "Pomiar trwa" : state.elapsed > 0 ? "Pauza" : "Gotowy";
+    return `${phase} • ${progress}`;
+  }
+
+  function updateWorkoutFocus() {
+    const isWorkout = state.mode === "workout";
+    elements.workoutFocus.hidden = !isWorkout;
+    elements.timerPanel.classList.toggle("workout-timer", isWorkout);
+
+    if (!isWorkout) {
+      return;
+    }
+
+    const step = currentWorkoutStep();
+    const isRest = step && step.type === "rest";
+    let title = "Plan";
+    let detail = "Ustaw plan treningu";
+
+    if (state.workout.completed) {
+      title = "Gotowe";
+      detail = "Trening zako\u0144czony";
+    } else if (step) {
+      title = isRest ? "Przerwa" : step.name;
+      detail = isRest
+        ? `Po: ${step.name} • Runda ${step.round}/${state.workout.rounds}`
+        : `Runda ${step.round}/${state.workout.rounds}`;
+    }
+
+    elements.workoutFocus.classList.toggle("rest", Boolean(isRest));
+    elements.workoutFocusTitle.textContent = title;
+    elements.workoutFocusDetail.textContent = detail;
   }
 
   async function requestWakeLock() {
@@ -394,6 +428,7 @@
     state.mode = mode;
     const isTimer = mode === "timer";
     const isWorkout = mode === "workout";
+    document.body.dataset.mode = mode;
 
     [
       [elements.stopwatchMode, mode === "stopwatch"],

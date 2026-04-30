@@ -36,8 +36,12 @@
       <button class="mode-button" id="workoutMode" type="button" aria-keyshortcuts="3" aria-pressed="false" title="Trening (3)">Trening</button>
     </section>
 
-    <section class="timer-panel" aria-label="Czas">
+    <section class="timer-panel" id="timerPanel" aria-label="Czas">
       <p class="mode-label" id="modeLabel">Stoper</p>
+      <div class="workout-focus" id="workoutFocus" hidden>
+        <span class="workout-focus-title" id="workoutFocusTitle">Plan</span>
+        <span class="workout-focus-detail" id="workoutFocusDetail">Gotowy</span>
+      </div>
       <div class="timer-display" id="timerDisplay">00:00<span class="milliseconds">.00</span></div>
       <p class="status-text" id="statusText">Gotowy</p>
       <div class="countdown-overlay" id="countdownOverlay" hidden>
