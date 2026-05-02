@@ -10,13 +10,38 @@
     restDuration: "trainingTimer.restDuration",
     rounds: "trainingTimer.rounds",
     exercises: "trainingTimer.exercises",
+    savedWorkouts: "trainingTimer.savedWorkouts",
+    activeWorkoutId: "trainingTimer.activeWorkoutId",
   };
 
-  const TEMPLATES = {
-    basic: ["Pompki", "Przysiady", "Plank"],
-    core: ["Plank", "Dead bug", "Mountain climbers", "Side plank"],
-    mobility: ["Krążenia barków", "Przysiad z pauzą", "Wykrok z rotacją", "Rozciąganie bioder"],
-  };
+  const MAX_SAVED_WORKOUTS = 5;
+  const DEFAULT_EXERCISES = ["Pompki", "Przysiady", "Plank"];
+  const DEFAULT_WORKOUTS = [
+    {
+      id: "basic",
+      name: "Podstawowy",
+      workDuration: 40,
+      restDuration: 20,
+      rounds: 3,
+      exercises: DEFAULT_EXERCISES,
+    },
+    {
+      id: "core",
+      name: "Core",
+      workDuration: 40,
+      restDuration: 20,
+      rounds: 3,
+      exercises: ["Plank", "Dead bug", "Mountain climbers", "Side plank"],
+    },
+    {
+      id: "mobility",
+      name: "Mobilność",
+      workDuration: 45,
+      restDuration: 15,
+      rounds: 2,
+      exercises: ["Krążenia barków", "Przysiad z pauzą", "Wykrok z rotacją", "Rozciąganie bioder"],
+    },
+  ];
 
   const elements = {
     infoToggle: document.getElementById("infoToggle"),
@@ -45,6 +70,13 @@
     restDurationInput: document.getElementById("restDurationInput"),
     roundsInput: document.getElementById("roundsInput"),
     exerciseNamesInput: document.getElementById("exerciseNamesInput"),
+    savedWorkoutSelect: document.getElementById("savedWorkoutSelect"),
+    workoutNameInput: document.getElementById("workoutNameInput"),
+    loadWorkoutButton: document.getElementById("loadWorkoutButton"),
+    saveWorkoutButton: document.getElementById("saveWorkoutButton"),
+    newWorkoutButton: document.getElementById("newWorkoutButton"),
+    deleteWorkoutButton: document.getElementById("deleteWorkoutButton"),
+    workoutLibraryNote: document.getElementById("workoutLibraryNote"),
     btnLap: document.getElementById("btnLap"),
     btnStartStop: document.getElementById("btnStartStop"),
     btnReset: document.getElementById("btnReset"),
@@ -55,7 +87,6 @@
     countdownSoundToggle: document.getElementById("countdownSoundToggle"),
     wakeLockToggle: document.getElementById("wakeLockToggle"),
     presetButtons: Array.from(document.querySelectorAll(".preset-row .preset-button")),
-    templateButtons: Array.from(document.querySelectorAll(".template-row .preset-button")),
   };
 
   const state = {
@@ -72,11 +103,13 @@
     countdownRemaining: 3,
     wakeLock: null,
     audioContext: null,
+    savedWorkouts: [],
+    activeWorkoutId: "basic",
     workout: {
       workDuration: 40 * 1000,
       restDuration: 20 * 1000,
       rounds: 3,
-      exercises: TEMPLATES.basic,
+      exercises: DEFAULT_EXERCISES,
       steps: [],
       stepIndex: 0,
       completed: false,
@@ -477,6 +510,186 @@
     }
   }
 
+  function cloneExercises(exercises) {
+    return exercises.map(function (name) {
+      return String(name).trim();
+    }).filter(Boolean);
+  }
+
+  function normalizeWorkout(workout, fallbackId) {
+    const fallback = DEFAULT_WORKOUTS[0];
+    const exercises = Array.isArray(workout.exercises) ? cloneExercises(workout.exercises) : [];
+
+    return {
+      id: String(workout.id || fallbackId || createWorkoutId()),
+      name: String(workout.name || "Mój trening").trim().slice(0, 28) || "Mój trening",
+      workDuration: clampNumber(workout.workDuration, fallback.workDuration, 5, 1800),
+      restDuration: clampNumber(workout.restDuration, fallback.restDuration, 0, 1800),
+      rounds: clampNumber(workout.rounds, fallback.rounds, 1, 20),
+      exercises: exercises.length ? exercises : DEFAULT_EXERCISES,
+    };
+  }
+
+  function createWorkoutId() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+      return window.crypto.randomUUID();
+    }
+
+    return `workout-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  }
+
+  function loadSavedWorkouts() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.savedWorkouts) || "[]");
+      if (Array.isArray(saved) && saved.length) {
+        return saved.slice(0, MAX_SAVED_WORKOUTS).map(function (workout, index) {
+          return normalizeWorkout(workout, `saved-${index + 1}`);
+        });
+      }
+    } catch (_error) {
+      // Corrupted localStorage should not block the app.
+    }
+
+    return DEFAULT_WORKOUTS.map(function (workout) {
+      return normalizeWorkout(workout, workout.id);
+    });
+  }
+
+  function persistSavedWorkouts() {
+    localStorage.setItem(STORAGE_KEYS.savedWorkouts, JSON.stringify(state.savedWorkouts));
+    localStorage.setItem(STORAGE_KEYS.activeWorkoutId, state.activeWorkoutId || "");
+  }
+
+  function currentWorkoutDraft() {
+    return normalizeWorkout({
+      id: state.activeWorkoutId || createWorkoutId(),
+      name: elements.workoutNameInput.value,
+      workDuration: elements.workDurationInput.value,
+      restDuration: elements.restDurationInput.value,
+      rounds: elements.roundsInput.value,
+      exercises: readExerciseNames(),
+    });
+  }
+
+  function applyWorkout(workout) {
+    const normalized = normalizeWorkout(workout, workout.id);
+    state.activeWorkoutId = normalized.id;
+    state.workout.workDuration = normalized.workDuration * 1000;
+    state.workout.restDuration = normalized.restDuration * 1000;
+    state.workout.rounds = normalized.rounds;
+    state.workout.exercises = normalized.exercises;
+
+    elements.workoutNameInput.value = normalized.name;
+    elements.workDurationInput.value = String(normalized.workDuration);
+    elements.restDurationInput.value = String(normalized.restDuration);
+    elements.roundsInput.value = String(normalized.rounds);
+    elements.exerciseNamesInput.value = normalized.exercises.join("\n");
+    saveWorkoutDraft();
+    buildWorkoutPlan();
+    reset();
+  }
+
+  function saveWorkoutDraft() {
+    localStorage.setItem(STORAGE_KEYS.workDuration, String(state.workout.workDuration / 1000));
+    localStorage.setItem(STORAGE_KEYS.restDuration, String(state.workout.restDuration / 1000));
+    localStorage.setItem(STORAGE_KEYS.rounds, String(state.workout.rounds));
+    localStorage.setItem(STORAGE_KEYS.exercises, state.workout.exercises.join("\n"));
+  }
+
+  function renderWorkoutLibrary() {
+    const unsavedOption = state.activeWorkoutId ? "" : '<option value="">Nowy trening (niezapisany)</option>';
+    elements.savedWorkoutSelect.innerHTML = unsavedOption + state.savedWorkouts.map(function (workout) {
+      return `<option value="${escapeHtml(workout.id)}">${escapeHtml(workout.name)}</option>`;
+    }).join("");
+
+    elements.savedWorkoutSelect.value = state.activeWorkoutId || "";
+    const hasSelected = Boolean(state.savedWorkouts.find(function (workout) {
+      return workout.id === state.activeWorkoutId;
+    }));
+    const atLimit = state.savedWorkouts.length >= MAX_SAVED_WORKOUTS;
+    const remaining = Math.max(0, MAX_SAVED_WORKOUTS - state.savedWorkouts.length);
+
+    elements.deleteWorkoutButton.disabled = !hasSelected || state.savedWorkouts.length <= 1;
+    elements.loadWorkoutButton.disabled = !hasSelected;
+    elements.saveWorkoutButton.disabled = !hasSelected && atLimit;
+    elements.newWorkoutButton.disabled = atLimit;
+    elements.workoutLibraryNote.textContent = hasSelected
+      ? `Zapisane: ${state.savedWorkouts.length}/${MAX_SAVED_WORKOUTS}. Zapisz nadpisze wybrany trening.`
+      : `Nowy trening nie jest jeszcze zapisany. Wolne miejsca: ${remaining}.`;
+  }
+
+  function selectSavedWorkout(id) {
+    const workout = state.savedWorkouts.find(function (item) {
+      return item.id === id;
+    });
+
+    if (!workout) {
+      return;
+    }
+
+    applyWorkout(workout);
+    persistSavedWorkouts();
+    renderWorkoutLibrary();
+  }
+
+  function saveCurrentWorkoutToLibrary() {
+    const draft = currentWorkoutDraft();
+    const existingIndex = state.savedWorkouts.findIndex(function (workout) {
+      return workout.id === state.activeWorkoutId;
+    });
+
+    if (existingIndex >= 0) {
+      draft.id = state.activeWorkoutId;
+      state.savedWorkouts[existingIndex] = draft;
+    } else if (state.savedWorkouts.length < MAX_SAVED_WORKOUTS) {
+      draft.id = createWorkoutId();
+      state.savedWorkouts.push(draft);
+      state.activeWorkoutId = draft.id;
+    }
+
+    state.workout.workDuration = draft.workDuration * 1000;
+    state.workout.restDuration = draft.restDuration * 1000;
+    state.workout.rounds = draft.rounds;
+    state.workout.exercises = draft.exercises;
+    elements.workoutNameInput.value = draft.name;
+    saveWorkoutDraft();
+    persistSavedWorkouts();
+    buildWorkoutPlan();
+    reset();
+    renderWorkoutLibrary();
+  }
+
+  function createNewWorkoutDraft() {
+    if (state.savedWorkouts.length >= MAX_SAVED_WORKOUTS) {
+      renderWorkoutLibrary();
+      return;
+    }
+
+    state.activeWorkoutId = "";
+    elements.savedWorkoutSelect.value = "";
+    elements.workoutNameInput.value = "Mój trening";
+    renderWorkoutLibrary();
+  }
+
+  function deleteSelectedWorkout() {
+    if (state.savedWorkouts.length <= 1) {
+      return;
+    }
+
+    const selectedId = state.activeWorkoutId;
+    state.savedWorkouts = state.savedWorkouts.filter(function (workout) {
+      return workout.id !== selectedId;
+    });
+
+    const nextWorkout = state.savedWorkouts[0];
+    if (nextWorkout) {
+      applyWorkout(nextWorkout);
+    }
+
+    persistSavedWorkouts();
+    renderWorkoutLibrary();
+  }
+
   function readExerciseNames() {
     const names = elements.exerciseNamesInput.value
       .split("\n")
@@ -485,11 +698,11 @@
       })
       .filter(Boolean);
 
-    return names.length ? names : TEMPLATES.basic;
+    return names.length ? names : DEFAULT_EXERCISES;
   }
 
   function parseWorkoutSequences(lines) {
-    const source = lines.length ? lines : TEMPLATES.basic;
+    const source = lines.length ? lines : DEFAULT_EXERCISES;
     const sequenceMode = source.some(function (line) {
       return line.includes(";");
     });
@@ -511,7 +724,7 @@
 
     return {
       sequenceMode: true,
-      sequences: sequences.length ? sequences : [TEMPLATES.basic],
+      sequences: sequences.length ? sequences : [DEFAULT_EXERCISES],
     };
   }
 
@@ -532,10 +745,7 @@
     elements.restDurationInput.value = String(state.workout.restDuration / 1000);
     elements.roundsInput.value = String(state.workout.rounds);
 
-    localStorage.setItem(STORAGE_KEYS.workDuration, String(state.workout.workDuration / 1000));
-    localStorage.setItem(STORAGE_KEYS.restDuration, String(state.workout.restDuration / 1000));
-    localStorage.setItem(STORAGE_KEYS.rounds, String(state.workout.rounds));
-    localStorage.setItem(STORAGE_KEYS.exercises, state.workout.exercises.join("\n"));
+    saveWorkoutDraft();
 
     if (!state.running) {
       buildWorkoutPlan();
@@ -802,13 +1012,17 @@
       input.addEventListener("change", saveWorkoutSettings);
     });
 
-    elements.templateButtons.forEach(function (button) {
-      button.addEventListener("click", function () {
-        const names = TEMPLATES[button.dataset.template] || TEMPLATES.basic;
-        elements.exerciseNamesInput.value = names.join("\n");
-        saveWorkoutSettings();
-      });
+    elements.savedWorkoutSelect.addEventListener("change", function () {
+      selectSavedWorkout(elements.savedWorkoutSelect.value);
     });
+
+    elements.loadWorkoutButton.addEventListener("click", function () {
+      selectSavedWorkout(elements.savedWorkoutSelect.value);
+    });
+
+    elements.saveWorkoutButton.addEventListener("click", saveCurrentWorkoutToLibrary);
+    elements.newWorkoutButton.addEventListener("click", createNewWorkoutDraft);
+    elements.deleteWorkoutButton.addEventListener("click", deleteSelectedWorkout);
 
     elements.soundToggle.addEventListener("change", function () {
       localStorage.setItem(STORAGE_KEYS.sound, String(elements.soundToggle.checked));
@@ -844,7 +1058,11 @@
     });
 
     document.addEventListener("keydown", function (event) {
-      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLSelectElement ||
+        event.target instanceof HTMLTextAreaElement
+      ) {
         return;
       }
 
@@ -883,19 +1101,30 @@
   }
 
   function initWorkoutSettings() {
+    const hadSavedLibrary = Boolean(localStorage.getItem(STORAGE_KEYS.savedWorkouts));
     const savedExercises = localStorage.getItem(STORAGE_KEYS.exercises);
-    state.workout.workDuration = clampNumber(localStorage.getItem(STORAGE_KEYS.workDuration), 40, 5, 1800) * 1000;
-    state.workout.restDuration = clampNumber(localStorage.getItem(STORAGE_KEYS.restDuration), 20, 0, 1800) * 1000;
-    state.workout.rounds = clampNumber(localStorage.getItem(STORAGE_KEYS.rounds), 3, 1, 20);
-    state.workout.exercises = savedExercises ? savedExercises.split("\n").map(function (name) {
-      return name.trim();
-    }).filter(Boolean) : TEMPLATES.basic;
+    state.savedWorkouts = loadSavedWorkouts();
 
-    elements.workDurationInput.value = String(state.workout.workDuration / 1000);
-    elements.restDurationInput.value = String(state.workout.restDuration / 1000);
-    elements.roundsInput.value = String(state.workout.rounds);
-    elements.exerciseNamesInput.value = state.workout.exercises.join("\n");
-    buildWorkoutPlan();
+    if (!hadSavedLibrary && savedExercises) {
+      const migratedWorkout = normalizeWorkout({
+        id: "last-workout",
+        name: "Ostatni trening",
+        workDuration: localStorage.getItem(STORAGE_KEYS.workDuration),
+        restDuration: localStorage.getItem(STORAGE_KEYS.restDuration),
+        rounds: localStorage.getItem(STORAGE_KEYS.rounds),
+        exercises: savedExercises.split("\n"),
+      }, "last-workout");
+      state.savedWorkouts = [migratedWorkout].concat(state.savedWorkouts).slice(0, MAX_SAVED_WORKOUTS);
+    }
+
+    const savedActiveId = localStorage.getItem(STORAGE_KEYS.activeWorkoutId);
+    const activeWorkout = state.savedWorkouts.find(function (workout) {
+      return workout.id === savedActiveId;
+    }) || state.savedWorkouts[0];
+
+    applyWorkout(activeWorkout);
+    persistSavedWorkouts();
+    renderWorkoutLibrary();
   }
 
   function init() {

@@ -64,6 +64,7 @@ body {
 
 button,
 input,
+select,
 textarea {
   font: inherit;
 }
@@ -74,6 +75,7 @@ button {
 
 button:focus-visible,
 input:focus-visible,
+select:focus-visible,
 textarea:focus-visible {
   outline: 4px solid var(--focus);
   outline-offset: 3px;
@@ -344,14 +346,10 @@ html.dark .theme-icon-dark {
 }
 
 .preset-row,
-.template-row {
+.library-actions {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
-}
-
-.template-row {
-  grid-template-columns: repeat(3, 1fr);
 }
 
 .preset-button {
@@ -359,9 +357,19 @@ html.dark .theme-icon-dark {
   background: var(--bg-card);
 }
 
+.preset-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.44;
+}
+
+.danger-button {
+  color: var(--warning);
+}
+
 .duration-field,
 .number-field,
 .exercise-field,
+.workout-library,
 .options,
 .shortcut-hints,
 .workout-overview {
@@ -384,6 +392,8 @@ html.dark .theme-icon-dark {
 
 .duration-field input,
 .number-field input,
+.saved-workout-field input,
+.saved-workout-field select,
 .exercise-field textarea {
   width: 100%;
   border: 1px solid var(--border);
@@ -402,6 +412,39 @@ html.dark .theme-icon-dark {
 .workout-settings {
   display: grid;
   gap: 14px;
+}
+
+.workout-library {
+  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr);
+  gap: 12px;
+}
+
+.saved-workout-field {
+  display: grid;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.saved-workout-field input,
+.saved-workout-field select {
+  min-height: 48px;
+  color: var(--text-primary);
+}
+
+.library-actions {
+  grid-column: 1 / -1;
+}
+
+.library-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .workout-grid {
@@ -942,9 +985,14 @@ body:fullscreen {
   }
 
   .preset-row,
-  .template-row,
+  .library-actions,
   .workout-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .workout-library {
+    grid-template-columns: 1fr;
+    padding: 12px;
   }
 
   .duration-field,

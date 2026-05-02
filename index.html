@@ -72,10 +72,22 @@
     </section>
 
     <section class="workout-settings" id="workoutSettings" aria-label="Plan treningu" hidden>
-      <div class="template-row" aria-label="Szablony ćwiczeń">
-        <button class="preset-button" type="button" data-template="basic">Podstawowy</button>
-        <button class="preset-button" type="button" data-template="core">Core</button>
-        <button class="preset-button" type="button" data-template="mobility">Mobilność</button>
+      <div class="workout-library" aria-label="Zapisane treningi">
+        <label class="saved-workout-field" for="savedWorkoutSelect">
+          <span>Zapisane treningi</span>
+          <select id="savedWorkoutSelect"></select>
+        </label>
+        <label class="saved-workout-field" for="workoutNameInput">
+          <span>Nazwa</span>
+          <input id="workoutNameInput" type="text" maxlength="28" autocomplete="off" value="Podstawowy">
+        </label>
+        <div class="library-actions">
+          <button class="preset-button" id="loadWorkoutButton" type="button">Wczytaj</button>
+          <button class="preset-button" id="saveWorkoutButton" type="button">Zapisz</button>
+          <button class="preset-button" id="newWorkoutButton" type="button">Nowy</button>
+          <button class="preset-button danger-button" id="deleteWorkoutButton" type="button">Usuń</button>
+        </div>
+        <p class="library-note" id="workoutLibraryNote">Możesz zapisać maksymalnie 5 treningów na tym urządzeniu.</p>
       </div>
 
       <div class="workout-grid">
@@ -171,6 +183,7 @@ Plank</textarea>
           <ul>
             <li>Wpisuj własne ćwiczenia, każde w nowej linii.</li>
             <li>Ustaw czas pracy, przerwy i liczbę rund.</li>
+            <li>Zapisuj własne treningi na tym urządzeniu.</li>
             <li>Czytaj aktualne ćwiczenie z daleka od monitora.</li>
           </ul>
         </section>

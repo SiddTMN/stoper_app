@@ -7,7 +7,8 @@ Statyczna aplikacja do odmierzania czasu podczas ćwiczeń: stoper, minutnik prz
 - Stoper z okrążeniami i różnicą czasu od poprzedniego okrążenia.
 - Minutnik przerw z presetami 1, 2, 3 i 5 minut oraz własnym czasem w sekundach.
 - Tryb treningu: lista ćwiczeń, czas pracy, czas przerwy i liczba rund.
-- Gotowe szablony ćwiczeń oraz możliwość wpisania własnych nazw, po jednej w linii.
+- Do 5 zapisanych treningów w przeglądarce, z możliwością wczytania, edycji, nadpisania i usunięcia.
+- Domyślne treningi `Podstawowy`, `Core` i `Mobilność`, które można potraktować jako punkt startowy.
 - Odliczanie 3-2-1 przed świeżym startem pomiaru, z osobnym przełącznikiem dźwięku.
 - Tryb pełnoekranowy przydatny przy ćwiczeniach z dala od monitora.
 - Motyw jasny i ciemny, zapamiętywany w przeglądarce.
