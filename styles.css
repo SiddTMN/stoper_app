@@ -246,6 +246,21 @@ html.dark .theme-icon-dark {
   line-height: 1.15;
 }
 
+.workout-focus-next {
+  max-width: 100%;
+  color: var(--text-secondary);
+  font-size: clamp(14px, 1.7vw, 19px);
+  font-weight: 700;
+  line-height: 1.2;
+  opacity: 0.82;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.workout-focus-next[hidden] {
+  display: none;
+}
+
 .workout-focus.rest .workout-focus-title {
   color: var(--text-secondary);
 }
@@ -898,6 +913,10 @@ body:fullscreen {
     font-size: clamp(14px, 4vw, 18px);
   }
 
+  .workout-focus-next {
+    font-size: clamp(13px, 3.6vw, 16px);
+  }
+
   .countdown-overlay span {
     font-size: clamp(120px, 42vw, 210px);
   }
@@ -1005,6 +1024,10 @@ body:fullscreen {
 
   .workout-focus-detail {
     font-size: clamp(14px, 2.4vh, 20px);
+  }
+
+  .workout-focus-next {
+    font-size: clamp(13px, 2.2vh, 17px);
   }
 
   .workout-timer .timer-display {

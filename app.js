@@ -33,6 +33,7 @@
     workoutFocus: document.getElementById("workoutFocus"),
     workoutFocusTitle: document.getElementById("workoutFocusTitle"),
     workoutFocusDetail: document.getElementById("workoutFocusDetail"),
+    workoutFocusNext: document.getElementById("workoutFocusNext"),
     countdownOverlay: document.getElementById("countdownOverlay"),
     countdownValue: document.getElementById("countdownValue"),
     statusText: document.getElementById("statusText"),
@@ -146,6 +147,10 @@
     return state.workout.steps[state.workout.stepIndex] || null;
   }
 
+  function nextWorkoutStep() {
+    return state.workout.steps[state.workout.stepIndex + 1] || null;
+  }
+
   function workoutRemaining() {
     const step = currentWorkoutStep();
     return step ? Math.max(0, step.duration - currentElapsed()) : 0;
@@ -228,21 +233,26 @@
     }
 
     const step = currentWorkoutStep();
+    const nextStep = nextWorkoutStep();
     const isRest = step && step.type === "rest";
     let title = "Plan";
     let detail = "Ustaw plan treningu";
+    let nextLabel = "";
 
     if (state.workout.completed) {
       title = "Gotowe";
       detail = "Trening zako\u0144czony";
     } else if (step) {
       title = isRest ? "Przerwa" : step.name;
+      nextLabel = nextStep ? `Następne: ${nextStep.type === "rest" ? "Przerwa" : nextStep.name}` : "";
       detail = isRest ? `Po: ${step.name} • ${step.roundLabel}` : step.roundLabel;
     }
 
     elements.workoutFocus.classList.toggle("rest", Boolean(isRest));
     elements.workoutFocusTitle.textContent = title;
     elements.workoutFocusDetail.textContent = detail;
+    elements.workoutFocusNext.textContent = nextLabel;
+    elements.workoutFocusNext.hidden = !nextLabel;
   }
 
   async function requestWakeLock() {
