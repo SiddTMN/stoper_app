@@ -95,12 +95,17 @@
         </label>
       </div>
 
-      <label class="exercise-field" for="exerciseNamesInput">
-        <span>Ćwiczenia: osobno w liniach albo sekwencje po średniku</span>
+      <div class="exercise-field">
+        <label for="exerciseNamesInput">Ćwiczenia</label>
+        <details class="sequence-help">
+          <summary>Jak wpisać sekwencje?</summary>
+          <p>Jedno ćwiczenie w linii oznacza zwykłą listę. Średnik dzieli linię na sekwencję, czyli kilka ćwiczeń wykonywanych razem w każdej serii.</p>
+          <p class="sequence-example">Pompki; Przysiady; Plank</p>
+        </details>
         <textarea id="exerciseNamesInput" rows="4" spellcheck="false">Pompki
 Przysiady
 Plank</textarea>
-      </label>
+      </div>
     </section>
 
     <section class="workout-overview" id="workoutOverview" aria-label="Przebieg treningu" hidden></section>
@@ -136,7 +141,6 @@ Plank</textarea>
     <section class="laps-section" id="lapsSection" aria-label="Okrążenia"></section>
 
     <footer class="app-footer">
-      <button class="text-link" id="footerInfoToggle" type="button">Info</button>
       <span>powered by <strong>Sidd</strong></span>
     </footer>
   </main>

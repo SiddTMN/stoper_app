@@ -20,7 +20,6 @@
 
   const elements = {
     infoToggle: document.getElementById("infoToggle"),
-    footerInfoToggle: document.getElementById("footerInfoToggle"),
     infoDialog: document.getElementById("infoDialog"),
     infoClose: document.getElementById("infoClose"),
     themeToggle: document.getElementById("themeToggle"),
@@ -745,7 +744,6 @@
 
   function bindEvents() {
     elements.infoToggle.addEventListener("click", openInfo);
-    elements.footerInfoToggle.addEventListener("click", openInfo);
     elements.infoClose.addEventListener("click", closeInfo);
     elements.infoDialog.addEventListener("click", function (event) {
       if (event.target === elements.infoDialog) {

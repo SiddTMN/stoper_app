@@ -407,6 +407,34 @@ html.dark .theme-icon-dark {
   font-weight: 700;
 }
 
+.sequence-help {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-card) 62%, transparent);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sequence-help summary {
+  min-height: 42px;
+  padding: 10px 12px;
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.sequence-help p {
+  margin: 0;
+  padding: 0 12px 10px;
+  line-height: 1.45;
+}
+
+.sequence-example {
+  color: var(--text-primary);
+  font-family: "Space Mono", monospace;
+}
+
 .exercise-field textarea {
   min-height: 128px;
   resize: vertical;
@@ -631,23 +659,6 @@ kbd {
 
 .app-footer strong {
   color: var(--accent);
-}
-
-.text-link {
-  border: 0;
-  border-radius: 999px;
-  padding: 8px 12px;
-  background: color-mix(in srgb, var(--bg-card) 74%, transparent);
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.text-link:hover {
-  color: var(--text-primary);
 }
 
 .info-dialog {
