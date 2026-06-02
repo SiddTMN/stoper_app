@@ -17,6 +17,11 @@ Statyczna aplikacja do odmierzania czasu podczas ćwiczeń: stoper, minutnik prz
 - Panel `Info` w aplikacji z krótką listą najważniejszych możliwości.
 - Subtelne oznaczenie `powered by Sidd` w interfejsie.
 - Service worker i manifest, dzięki którym aplikacja może działać wygodniej na telefonie i częściowo offline.
+- Pomiar oparty o rzeczywisty czas zegara, więc po powrocie z tła aplikacja nadrabia upłynięty czas i kolejne kroki treningu, o ile przeglądarka nie zamknęła całej karty.
+
+## Działanie w tle
+
+Aplikacja nadal może być hostowana na GitHub Pages, ale przeglądarki mają twarde ograniczenia: statyczna strona nie ma stale działającego procesu w tle, a telefon może zamrozić albo zamknąć kartę. Dlatego apka próbuje zaplanować najbliższy koniec minutnika/kroku i po powrocie do widoku nadrabia czas z zegara systemowego. Dźwięk i wibracja w tle zależą od przeglądarki, systemu i tego, czy aplikacja nie została ubita.
 
 ## Skróty klawiszowe
 

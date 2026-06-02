@@ -98,6 +98,7 @@
     laps: [],
     lastLapTime: 0,
     frameId: null,
+    deadlineTimerId: null,
     countdownTimerId: null,
     countdownRunning: false,
     countdownRemaining: 3,
@@ -192,6 +193,16 @@
   function updateDisplay() {
     const isStopwatch = state.mode === "stopwatch";
     const isTimer = state.mode === "timer";
+
+    if (isTimer && state.running && currentElapsed() >= state.duration) {
+      finishTimer();
+      return;
+    }
+
+    if (state.mode === "workout" && state.running && settleWorkoutProgress()) {
+      return;
+    }
+
     const value = isStopwatch ? currentElapsed() : isTimer ? timerRemaining() : workoutRemaining();
     const warning = !isStopwatch && state.running && value <= 10000;
     const done = !isStopwatch && value === 0 && !state.running;
@@ -200,17 +211,8 @@
     elements.timerDisplay.classList.toggle("warning", warning);
     elements.timerDisplay.classList.toggle("done", done);
 
-    if (isTimer && state.running && value <= 0) {
-      finishTimer();
-      return;
-    }
-
-    if (state.mode === "workout" && state.running && value <= 0) {
-      advanceWorkout();
-      return;
-    }
-
     if (state.running) {
+      scheduleDeadlineTick();
       state.frameId = requestAnimationFrame(updateDisplay);
     }
   }
@@ -339,6 +341,7 @@
     state.running = true;
     state.startTime = Date.now();
     requestWakeLock();
+    scheduleDeadlineTick();
     updateButtons();
     updateDisplay();
     renderWorkoutOverview();
@@ -359,6 +362,7 @@
     state.elapsed += Date.now() - state.startTime;
     state.running = false;
     cancelFrame();
+    cancelDeadlineTick();
     releaseWakeLock();
     updateButtons();
     updateDisplay();
@@ -374,6 +378,7 @@
     state.workout.stepIndex = 0;
     state.workout.completed = false;
     cancelFrame();
+    cancelDeadlineTick();
     releaseWakeLock();
     elements.lapsSection.innerHTML = "";
     updateButtons();
@@ -386,6 +391,27 @@
       cancelAnimationFrame(state.frameId);
       state.frameId = null;
     }
+  }
+
+  function cancelDeadlineTick() {
+    if (state.deadlineTimerId !== null) {
+      window.clearTimeout(state.deadlineTimerId);
+      state.deadlineTimerId = null;
+    }
+  }
+
+  function scheduleDeadlineTick() {
+    cancelDeadlineTick();
+
+    if (!state.running || state.mode === "stopwatch") {
+      return;
+    }
+
+    const remaining = state.mode === "timer" ? timerRemaining() : workoutRemaining();
+    state.deadlineTimerId = window.setTimeout(function () {
+      state.deadlineTimerId = null;
+      updateDisplay();
+    }, Math.max(0, remaining) + 50);
   }
 
   function shouldStartWithCountdown() {
@@ -803,34 +829,74 @@
     renderWorkoutOverview();
   }
 
-  function advanceWorkout() {
+  function signalWorkoutStepDone() {
     playDoneSound(0.12);
     if ("vibrate" in navigator) {
       navigator.vibrate(120);
     }
+  }
 
+  function finishWorkout() {
+    state.elapsed = 0;
+    state.running = false;
+    state.workout.completed = true;
+    cancelFrame();
+    cancelDeadlineTick();
+    releaseWakeLock();
+    playDoneSound(0.2);
+    if ("vibrate" in navigator) {
+      navigator.vibrate([180, 80, 180]);
+    }
+    updateButtons();
+    updateDisplay();
+    renderWorkoutOverview();
+  }
+
+  function advanceWorkout() {
+    signalWorkoutStepDone();
     if (state.workout.stepIndex >= state.workout.steps.length - 1) {
-      state.elapsed = 0;
-      state.running = false;
-      state.workout.completed = true;
-      cancelFrame();
-      releaseWakeLock();
-      playDoneSound(0.2);
-      if ("vibrate" in navigator) {
-        navigator.vibrate([180, 80, 180]);
-      }
-      updateButtons();
-      updateDisplay();
-      renderWorkoutOverview();
+      finishWorkout();
       return;
     }
 
     state.workout.stepIndex += 1;
     state.elapsed = 0;
     state.startTime = Date.now();
+    scheduleDeadlineTick();
     updateButtons();
     renderWorkoutOverview();
     updateDisplay();
+  }
+
+  function settleWorkoutProgress() {
+    const now = Date.now();
+    let elapsedInStep = now - state.startTime + state.elapsed;
+    let step = currentWorkoutStep();
+    let advanced = false;
+
+    while (step && elapsedInStep >= step.duration) {
+      signalWorkoutStepDone();
+
+      if (state.workout.stepIndex >= state.workout.steps.length - 1) {
+        finishWorkout();
+        return true;
+      }
+
+      elapsedInStep -= step.duration;
+      state.workout.stepIndex += 1;
+      state.elapsed = elapsedInStep;
+      state.startTime = now;
+      step = currentWorkoutStep();
+      advanced = true;
+    }
+
+    if (advanced) {
+      scheduleDeadlineTick();
+      updateButtons();
+      renderWorkoutOverview();
+    }
+
+    return false;
   }
 
   function renderWorkoutOverview() {
@@ -865,6 +931,7 @@
     state.elapsed = state.duration;
     state.running = false;
     cancelFrame();
+    cancelDeadlineTick();
     releaseWakeLock();
     playDoneSound(0.2);
     if ("vibrate" in navigator) {
